@@ -1,0 +1,1094 @@
+{
+  "version": {
+    "category": "device_info",
+    "description": "Should return 'km.MAKCU'",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.version()",
+        "raw": "6b6d2e4d414b43550d0a3e3e3e20"
+      }
+    ]
+  },
+  "query_left": {
+    "category": "button_query",
+    "description": "Should return 0 or 1 \u2014 the current physical state of left",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.left()",
+        "raw": "6b6d2e6c65667428290a300d0a3e3e3e20"
+      }
+    ]
+  },
+  "query_right": {
+    "category": "button_query",
+    "description": "Should return 0 or 1 \u2014 the current physical state of right",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.right()",
+        "raw": "6b6d2e726967687428290a300d0a3e3e3e20"
+      }
+    ]
+  },
+  "query_middle": {
+    "category": "button_query",
+    "description": "Should return 0 or 1 \u2014 the current physical state of middle",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.middle()",
+        "raw": "6b6d2e6d6964646c6528290a300d0a3e3e3e20"
+      }
+    ]
+  },
+  "query_ms1": {
+    "category": "button_query",
+    "description": "Should return 0 or 1 \u2014 the current physical state of ms1",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.ms1()",
+        "raw": "6b6d2e6d733128290a300d0a3e3e3e20"
+      }
+    ]
+  },
+  "query_ms2": {
+    "category": "button_query",
+    "description": "Should return 0 or 1 \u2014 the current physical state of ms2",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.ms2()",
+        "raw": "6b6d2e6d733228290a300d0a3e3e3e20"
+      }
+    ]
+  },
+  "query_wrong_side1": {
+    "category": "button_query",
+    "description": "km.side1() \u2014 NOT a valid name (firmware uses ms1/ms2 instead), expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.side1()",
+        "raw": ""
+      }
+    ]
+  },
+  "query_wrong_side2": {
+    "category": "button_query",
+    "description": "km.side2() \u2014 NOT a valid name (firmware uses ms1/ms2 instead), expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.side2()",
+        "raw": ""
+      }
+    ]
+  },
+  "press_left": {
+    "category": "button_press",
+    "description": "Watch for left button to be held, then auto-released after 400ms",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.left(1)",
+        "raw": "6b6d2e6c6566742831290d0a3e3e3e20"
+      }
+    ]
+  },
+  "press_right": {
+    "category": "button_press",
+    "description": "Watch for right button to be held, then auto-released after 400ms",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.right(1)",
+        "raw": "6b6d2e72696768742831290d0a3e3e3e20"
+      }
+    ]
+  },
+  "press_middle": {
+    "category": "button_press",
+    "description": "Watch for middle button to be held, then auto-released after 400ms",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.middle(1)",
+        "raw": "6b6d2e6d6964646c652831290d0a3e3e3e20"
+      }
+    ]
+  },
+  "press_ms1": {
+    "category": "button_press",
+    "description": "Watch for ms1 button to be held, then auto-released after 400ms",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.ms1(1)",
+        "raw": "6b6d2e6d73312831290d0a3e3e3e20"
+      }
+    ]
+  },
+  "press_ms2": {
+    "category": "button_press",
+    "description": "Watch for ms2 button to be held, then auto-released after 400ms",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.ms2(1)",
+        "raw": "6b6d2e6d73322831290d0a3e3e3e20"
+      }
+    ]
+  },
+  "forced_up_left": {
+    "category": "button_press",
+    "description": "Hold left button physically THEN the script fires km.left(2) \u2014 should force-release even while you hold",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.left(2)",
+        "raw": "6b6d2e6c6566742832290d0a3e3e3e20"
+      }
+    ]
+  },
+  "move_basic_right": {
+    "category": "movement",
+    "description": "Cursor should jump ~50px right instantly",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.move(50,0)",
+        "raw": "6b6d2e6d6f76652835302c30290d0a3e3e3e20"
+      }
+    ]
+  },
+  "move_basic_left": {
+    "category": "movement",
+    "description": "Cursor should jump ~50px left instantly",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.move(-50,0)",
+        "raw": "6b6d2e6d6f7665282d35302c30290d0a3e3e3e20"
+      }
+    ]
+  },
+  "move_smooth": {
+    "category": "movement",
+    "description": "Cursor should glide right over 500ms",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.move(100,0,500)",
+        "raw": "6b6d2e6d6f7665283130302c302c353030290d0a3e3e3e20"
+      }
+    ]
+  },
+  "move_overshoot": {
+    "category": "movement",
+    "description": "Smooth move with 20% overshoot \u2014 may briefly overshoot then snap to destination",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.move(100,0,500,20)",
+        "raw": "6b6d2e6d6f7665283130302c302c3530302c3230290d0a3e3e3e20"
+      }
+    ]
+  },
+  "move_bezier": {
+    "category": "movement",
+    "description": "Smooth move with bezier curve enabled (5th param = 1) \u2014 look for curved path",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.move(100,0,500,20,1)",
+        "raw": "6b6d2e6d6f7665283130302c302c3530302c32302c31290d0a3e3e3e20"
+      }
+    ]
+  },
+  "silent_move": {
+    "category": "movement",
+    "description": "km.silent(50,50): left-down \u2192 move \u2192 left-up in two frames \u2014 may register as a drag",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.silent(50,50)",
+        "raw": "6b6d2e73696c656e742835302c3530290d0a3e3e3e20"
+      }
+    ]
+  },
+  "click_1arg": {
+    "category": "click",
+    "description": "km.click(1) \u2014 expected SILENT; watch if left button actually clicks",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.click(1)",
+        "raw": ""
+      }
+    ]
+  },
+  "click_2arg": {
+    "category": "click",
+    "description": "km.click(1,50) \u2014 expected SILENT; watch for click",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.click(1,50)",
+        "raw": ""
+      }
+    ]
+  },
+  "click_3arg": {
+    "category": "click",
+    "description": "km.click(1,50,10) \u2014 expected SILENT; watch for click",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.click(1,50,10)",
+        "raw": ""
+      }
+    ]
+  },
+  "wheel_up": {
+    "category": "wheel",
+    "description": "Scroll up 3 ticks",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.wheel(3)",
+        "raw": "6b6d2e776865656c2833290d0a3e3e3e20"
+      }
+    ]
+  },
+  "wheel_down": {
+    "category": "wheel",
+    "description": "Scroll down 3 ticks",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.wheel(-3)",
+        "raw": "6b6d2e776865656c282d33290d0a3e3e3e20"
+      }
+    ]
+  },
+  "wheel_large": {
+    "category": "wheel",
+    "description": "km.wheel(127) \u2014 does it scroll 127 ticks or is it clamped to 1?",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.wheel(127)",
+        "raw": "6b6d2e776865656c28313237290d0a3e3e3e20"
+      }
+    ]
+  },
+  "wheel_neg_large": {
+    "category": "wheel",
+    "description": "km.wheel(-127) \u2014 same clamping question in reverse",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.wheel(-127)",
+        "raw": "6b6d2e776865656c282d313237290d0a3e3e3e20"
+      }
+    ]
+  },
+  "lock_mx": {
+    "category": "lock",
+    "description": "Send lock(1), query state (expect '1'), physically test:\n  \u2192 Try moving mouse LEFT/RIGHT physically \u2014 should be blocked\n  Lock is auto-cleared after your verdict.",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.lock_mx(1)",
+        "raw": "6b6d2e6c6f636b5f6d782831290d0a3e3e3e20"
+      },
+      {
+        "cmd": "km.lock_mx()",
+        "raw": "6b6d2e6c6f636b5f6d7828290a310d0a3e3e3e20"
+      }
+    ]
+  },
+  "lock_my": {
+    "category": "lock",
+    "description": "Send lock(1), query state (expect '1'), physically test:\n  \u2192 Try moving mouse UP/DOWN physically \u2014 should be blocked\n  Lock is auto-cleared after your verdict.",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.lock_my(1)",
+        "raw": "6b6d2e6c6f636b5f6d792831290d0a3e3e3e20"
+      },
+      {
+        "cmd": "km.lock_my()",
+        "raw": "6b6d2e6c6f636b5f6d7928290a310d0a3e3e3e20"
+      }
+    ]
+  },
+  "lock_ml": {
+    "category": "lock",
+    "description": "Send lock(1), query state (expect '1'), physically test:\n  \u2192 Try clicking LEFT button physically \u2014 should not register on PC\n  Lock is auto-cleared after your verdict.",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.lock_ml(1)",
+        "raw": "6b6d2e6c6f636b5f6d6c2831290d0a3e3e3e20"
+      },
+      {
+        "cmd": "km.lock_ml()",
+        "raw": "6b6d2e6c6f636b5f6d6c28290a310d0a3e3e3e20"
+      }
+    ]
+  },
+  "lock_mr": {
+    "category": "lock",
+    "description": "Send lock(1), query state (expect '1'), physically test:\n  \u2192 Try clicking RIGHT button physically \u2014 should not register on PC\n  Lock is auto-cleared after your verdict.",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.lock_mr(1)",
+        "raw": "6b6d2e6c6f636b5f6d722831290d0a3e3e3e20"
+      },
+      {
+        "cmd": "km.lock_mr()",
+        "raw": "6b6d2e6c6f636b5f6d7228290a310d0a3e3e3e20"
+      }
+    ]
+  },
+  "lock_mm": {
+    "category": "lock",
+    "description": "Send lock(1), query state (expect '1'), physically test:\n  \u2192 Try clicking MIDDLE button physically \u2014 should not register on PC\n  Lock is auto-cleared after your verdict.",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.lock_mm(1)",
+        "raw": "6b6d2e6c6f636b5f6d6d2831290d0a3e3e3e20"
+      },
+      {
+        "cmd": "km.lock_mm()",
+        "raw": "6b6d2e6c6f636b5f6d6d28290a310d0a3e3e3e20"
+      }
+    ]
+  },
+  "lock_ms1": {
+    "category": "lock",
+    "description": "Send lock(1), query state (expect '1'), physically test:\n  \u2192 Try pressing SIDE1 button physically \u2014 should not register on PC\n  Lock is auto-cleared after your verdict.",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.lock_ms1(1)",
+        "raw": "6b6d2e6c6f636b5f6d73312831290d0a3e3e3e20"
+      },
+      {
+        "cmd": "km.lock_ms1()",
+        "raw": "6b6d2e6c6f636b5f6d733128290a310d0a3e3e3e20"
+      }
+    ]
+  },
+  "lock_ms2": {
+    "category": "lock",
+    "description": "Send lock(1), query state (expect '1'), physically test:\n  \u2192 Try pressing SIDE2 button physically \u2014 should not register on PC\n  Lock is auto-cleared after your verdict.",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.lock_ms2(1)",
+        "raw": "6b6d2e6c6f636b5f6d73322831290d0a3e3e3e20"
+      },
+      {
+        "cmd": "km.lock_ms2()",
+        "raw": "6b6d2e6c6f636b5f6d733228290a310d0a3e3e3e20"
+      }
+    ]
+  },
+  "lock_mw": {
+    "category": "lock_extended",
+    "description": "km.lock_mw() \u2014 wheel lock, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.lock_mw()",
+        "raw": ""
+      }
+    ]
+  },
+  "lock_mxp": {
+    "category": "lock_extended",
+    "description": "km.lock_mx+(1) \u2014 partial/directional lock, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.lock_mx+(1)",
+        "raw": ""
+      }
+    ]
+  },
+  "lock_mxm": {
+    "category": "lock_extended",
+    "description": "km.lock_mx-(1) \u2014 partial/directional lock, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.lock_mx-(1)",
+        "raw": ""
+      }
+    ]
+  },
+  "lock_myp": {
+    "category": "lock_extended",
+    "description": "km.lock_my+(1) \u2014 partial/directional lock, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.lock_my+(1)",
+        "raw": ""
+      }
+    ]
+  },
+  "lock_mym": {
+    "category": "lock_extended",
+    "description": "km.lock_my-(1) \u2014 partial/directional lock, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.lock_my-(1)",
+        "raw": ""
+      }
+    ]
+  },
+  "lock_mwp": {
+    "category": "lock_extended",
+    "description": "km.lock_mw+(1) \u2014 partial/directional lock, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.lock_mw+(1)",
+        "raw": ""
+      }
+    ]
+  },
+  "lock_mwm": {
+    "category": "lock_extended",
+    "description": "km.lock_mw-(1) \u2014 partial/directional lock, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.lock_mw-(1)",
+        "raw": ""
+      }
+    ]
+  },
+  "buttons_query": {
+    "category": "button_stream",
+    "description": "km.buttons() \u2014 should return 0 or 1 (stream enabled state)",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.buttons()",
+        "raw": "6b6d2e627574746f6e7328290a300d0a3e3e3e20"
+      }
+    ]
+  },
+  "buttons_enable": {
+    "category": "button_stream",
+    "description": "km.buttons(1) \u2014 enable stream, then the script listens for 4 seconds.\n  \u2192 Click/move mouse buttons and watch for raw bitmask bytes to appear.\n  Stream is auto-disabled after the listen window.",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.buttons(1)",
+        "raw": "6b6d2e627574746f6e732831290d0a3e3e3e20",
+        "stream_events": [
+          {
+            "byte": 16,
+            "buttons": [
+              "SIDE2"
+            ]
+          },
+          {
+            "byte": 0,
+            "buttons": []
+          },
+          {
+            "byte": 1,
+            "buttons": [
+              "LEFT"
+            ]
+          },
+          {
+            "byte": 0,
+            "buttons": []
+          },
+          {
+            "byte": 8,
+            "buttons": [
+              "SIDE1"
+            ]
+          },
+          {
+            "byte": 0,
+            "buttons": []
+          }
+        ]
+      }
+    ]
+  },
+  "catch_ml": {
+    "category": "catch",
+    "description": "km.catch_ml() \u2014 click the left button a few times BEFORE replying, then check count",
+    "verdict": "maybe",
+    "note": "just seems to stay on 0",
+    "responses": [
+      {
+        "cmd": "km.catch_ml()",
+        "raw": "6b6d2e63617463685f6d6c28290a300d0a3e3e3e20"
+      }
+    ]
+  },
+  "catch_mm": {
+    "category": "catch",
+    "description": "km.catch_mm() \u2014 click the middle button a few times BEFORE replying, then check count",
+    "verdict": "maybe",
+    "note": "just seems to stay on 0",
+    "responses": [
+      {
+        "cmd": "km.catch_mm()",
+        "raw": "6b6d2e63617463685f6d6d28290a300d0a3e3e3e20"
+      }
+    ]
+  },
+  "catch_mr": {
+    "category": "catch",
+    "description": "km.catch_mr() \u2014 click the right button a few times BEFORE replying, then check count",
+    "verdict": "maybe",
+    "note": "Just seems to stay on 0",
+    "responses": [
+      {
+        "cmd": "km.catch_mr()",
+        "raw": "6b6d2e63617463685f6d7228290a300d0a3e3e3e20"
+      }
+    ]
+  },
+  "catch_ms1": {
+    "category": "catch",
+    "description": "km.catch_ms1() \u2014 click the side1 button a few times BEFORE replying, then check count",
+    "verdict": "maybe",
+    "note": "just seems to stay on 0",
+    "responses": [
+      {
+        "cmd": "km.catch_ms1()",
+        "raw": "6b6d2e63617463685f6d733128290a300d0a3e3e3e20"
+      }
+    ]
+  },
+  "catch_ms2": {
+    "category": "catch",
+    "description": "km.catch_ms2() \u2014 click the side2 button a few times BEFORE replying, then check count",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.catch_ms2()",
+        "raw": "6b6d2e63617463685f6d733228290a300d0a3e3e3e20"
+      }
+    ]
+  },
+  "serial_get": {
+    "category": "serial",
+    "description": "km.serial() \u2014 returns serial or 'Mouse does not have a serial number'",
+    "verdict": "yes",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.serial()",
+        "raw": "6b6d2e4d6f75736520646f6573206e6f74206861766520612073657269616c206e756d6265720a0d0a3e3e3e20"
+      }
+    ]
+  },
+  "serial_set": {
+    "category": "serial",
+    "description": "km.serial('VFY_TEST') \u2014 spoof serial (hardware-dependent)",
+    "verdict": "maybe",
+    "note": "Just stays on \"km.Mouse doesn not have a serial number\"",
+    "responses": [
+      {
+        "cmd": "km.serial('VFY_TEST')",
+        "raw": "6b6d2e4d6f75736520646f6573206e6f74206861766520612073657269616c206e756d6265720a0d0a3e3e3e20"
+      }
+    ]
+  },
+  "serial_reset": {
+    "category": "serial",
+    "description": "km.serial(0) \u2014 reset spoof",
+    "verdict": "maybe",
+    "note": "same again, mouse does not have a serial number",
+    "responses": [
+      {
+        "cmd": "km.serial(0)",
+        "raw": "6b6d2e4d6f75736520646f6573206e6f74206861766520612073657269616c206e756d6265720a0d0a3e3e3e20"
+      }
+    ]
+  },
+  "screen_set": {
+    "category": "absolute",
+    "description": "km.screen(1920,1080) \u2014 set screen bounds, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.screen(1920,1080)",
+        "raw": ""
+      }
+    ]
+  },
+  "screen_query": {
+    "category": "absolute",
+    "description": "km.screen() \u2014 query screen bounds, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.screen()",
+        "raw": ""
+      }
+    ]
+  },
+  "moveto": {
+    "category": "absolute",
+    "description": "moveto(100,100) \u2014 absolute move, expected SILENT; watch if cursor moves",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "moveto(100,100)",
+        "raw": ""
+      }
+    ]
+  },
+  "getpos": {
+    "category": "absolute",
+    "description": "getpos() \u2014 query mouse position, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "getpos()",
+        "raw": ""
+      }
+    ]
+  },
+  "axis_stream_rel": {
+    "category": "axis",
+    "description": "km.axis(2,1) \u2014 relative axis stream, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.axis(2,1)",
+        "raw": ""
+      }
+    ]
+  },
+  "axis_stream_abs": {
+    "category": "axis",
+    "description": "km.axis(1,1) \u2014 absolute axis stream, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.axis(1,1)",
+        "raw": ""
+      }
+    ]
+  },
+  "axis_query": {
+    "category": "axis",
+    "description": "km.axis() \u2014 query axis stream state, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.axis()",
+        "raw": ""
+      }
+    ]
+  },
+  "mo_frame": {
+    "category": "raw_frame",
+    "description": "km.mo(0,5,5,0,0,0) \u2014 raw HID frame: no buttons, x+5, y+5. Expected SILENT;\n  watch if cursor actually moves",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.mo(0,5,5,0,0,0)",
+        "raw": ""
+      }
+    ]
+  },
+  "pan": {
+    "category": "scroll_extra",
+    "description": "km.pan(3) \u2014 horizontal scroll, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.pan(3)",
+        "raw": ""
+      }
+    ]
+  },
+  "tilt": {
+    "category": "scroll_extra",
+    "description": "km.tilt(3) \u2014 tilt scroll, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.tilt(3)",
+        "raw": ""
+      }
+    ]
+  },
+  "mouse_stream": {
+    "category": "streaming",
+    "description": "km.mouse() \u2014 full mouse data stream, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.mouse()",
+        "raw": ""
+      }
+    ]
+  },
+  "turbo": {
+    "category": "turbo",
+    "description": "km.turbo() \u2014 rapid-fire hold cycling, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.turbo()",
+        "raw": ""
+      }
+    ]
+  },
+  "remap_remap_button_": {
+    "category": "remap",
+    "description": "km.remap_button() \u2014 remap/invert/swap, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.remap_button()",
+        "raw": ""
+      }
+    ]
+  },
+  "remap_remap_axis_": {
+    "category": "remap",
+    "description": "km.remap_axis() \u2014 remap/invert/swap, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.remap_axis()",
+        "raw": ""
+      }
+    ]
+  },
+  "remap_invert_x_1": {
+    "category": "remap",
+    "description": "km.invert_x(1) \u2014 remap/invert/swap, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.invert_x(1)",
+        "raw": ""
+      }
+    ]
+  },
+  "remap_invert_y_1": {
+    "category": "remap",
+    "description": "km.invert_y(1) \u2014 remap/invert/swap, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.invert_y(1)",
+        "raw": ""
+      }
+    ]
+  },
+  "remap_swap_xy_1": {
+    "category": "remap",
+    "description": "km.swap_xy(1) \u2014 remap/invert/swap, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.swap_xy(1)",
+        "raw": ""
+      }
+    ]
+  },
+  "kbd_down_4": {
+    "category": "keyboard",
+    "description": "km.down(4) \u2014 keyboard command, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.down(4)",
+        "raw": ""
+      }
+    ]
+  },
+  "kbd_up_4": {
+    "category": "keyboard",
+    "description": "km.up(4) \u2014 keyboard command, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.up(4)",
+        "raw": ""
+      }
+    ]
+  },
+  "kbd_press_4_50": {
+    "category": "keyboard",
+    "description": "km.press(4,50) \u2014 keyboard command, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.press(4,50)",
+        "raw": ""
+      }
+    ]
+  },
+  "kbd_string_hi": {
+    "category": "keyboard",
+    "description": "km.string('hi') \u2014 keyboard command, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.string('hi')",
+        "raw": ""
+      }
+    ]
+  },
+  "kbd_init_": {
+    "category": "keyboard",
+    "description": "km.init() \u2014 keyboard command, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.init()",
+        "raw": ""
+      }
+    ]
+  },
+  "kbd_isdown_4": {
+    "category": "keyboard",
+    "description": "km.isdown(4) \u2014 keyboard command, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.isdown(4)",
+        "raw": ""
+      }
+    ]
+  },
+  "kbd_disable_": {
+    "category": "keyboard",
+    "description": "km.disable() \u2014 keyboard command, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.disable()",
+        "raw": ""
+      }
+    ]
+  },
+  "kbd_mask_4": {
+    "category": "keyboard",
+    "description": "km.mask(4) \u2014 keyboard command, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.mask(4)",
+        "raw": ""
+      }
+    ]
+  },
+  "mgmt_info": {
+    "category": "device_mgmt",
+    "description": "km.info() \u2014 device management, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.info()",
+        "raw": ""
+      }
+    ]
+  },
+  "mgmt_device": {
+    "category": "device_mgmt",
+    "description": "km.device() \u2014 device management, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.device()",
+        "raw": ""
+      }
+    ]
+  },
+  "mgmt_fault": {
+    "category": "device_mgmt",
+    "description": "km.fault() \u2014 device management, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.fault()",
+        "raw": ""
+      }
+    ]
+  },
+  "mgmt_baud": {
+    "category": "device_mgmt",
+    "description": "km.baud() \u2014 device management, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.baud()",
+        "raw": ""
+      }
+    ]
+  },
+  "mgmt_echo": {
+    "category": "device_mgmt",
+    "description": "km.echo() \u2014 device management, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.echo()",
+        "raw": ""
+      }
+    ]
+  },
+  "mgmt_log": {
+    "category": "device_mgmt",
+    "description": "km.log() \u2014 device management, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.log()",
+        "raw": ""
+      }
+    ]
+  },
+  "mgmt_hs": {
+    "category": "device_mgmt",
+    "description": "km.hs() \u2014 device management, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.hs()",
+        "raw": ""
+      }
+    ]
+  },
+  "mgmt_release": {
+    "category": "device_mgmt",
+    "description": "km.release() \u2014 device management, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.release()",
+        "raw": ""
+      }
+    ]
+  },
+  "mgmt_led": {
+    "category": "device_mgmt",
+    "description": "km.led() \u2014 device management, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.led()",
+        "raw": ""
+      }
+    ]
+  },
+  "mgmt_bypass": {
+    "category": "device_mgmt",
+    "description": "km.bypass() \u2014 device management, expected SILENT",
+    "verdict": "no",
+    "note": "",
+    "responses": [
+      {
+        "cmd": "km.bypass()",
+        "raw": ""
+      }
+    ]
+  }
+}

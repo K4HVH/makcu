@@ -2,5 +2,13 @@
 name = "makcu"
 version = "0.1.0"
 edition = "2024"
+description = "Rust library for controlling MAKCU devices"
+license = "MIT"
+
+[lib]
+name = "makcu"
+path = "src/lib.rs"
 
 [dependencies]
+serialport = "4"
+thiserror = "2"
