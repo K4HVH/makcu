@@ -17,7 +17,7 @@
 | Flag      | Default | Description                                                         |
 |-----------|---------|---------------------------------------------------------------------|
 | `async`   | off     | Enables `AsyncDevice` and async batch/extras, pulls in tokio        |
-| `batch`   | off     | Enables `BatchBuilder` and `AsyncBatchBuilder` (requires `async`)   |
+| `batch`   | off     | Enables `BatchBuilder`; adds `AsyncBatchBuilder` when `async` is also enabled |
 | `extras`  | off     | Library-implemented functionality (click, smooth move, drag, etc.)  |
 | `profile` | off     | Per-command timing profiler, zero-cost when disabled                |
 | `mock`    | off     | Replaces serial transport with an in-process fake for unit testing  |
@@ -81,11 +81,14 @@ makcu/
     │   └── builder.rs            — BatchBuilder + AsyncBatchBuilder  [cfg(async)]
     │                               Extras commands included when feature = "extras"
     │
-    └── extras/                   — feature = "extras"  [sync + async throughout]
-        ├── mod.rs
-        ├── click.rs              — click, click_sequence  [sync + async]
-        ├── smooth.rs             — move_smooth, move_pattern, drag  [sync + async]
-        └── events.rs             — on_button_press, on_button_event, EventHandle  [sync + async]
+    ├── extras/                   — feature = "extras"  [sync + async throughout]
+    │   ├── mod.rs
+    │   ├── click.rs              — click, click_sequence  [sync + async]
+    │   ├── smooth.rs             — move_smooth, move_pattern, drag  [sync + async]
+    │   └── events.rs             — on_button_press, on_button_event, EventHandle  [sync + async]
+    │
+    └── profiler/                 — feature = "profile"
+        └── mod.rs                — CommandStat, record(), stats(), reset(), timed! macro
 ```
 
 ### How async parity works in practice
@@ -169,7 +172,7 @@ pub type Result<T> = std::result::Result<T, MakcuError>;
 
 ---
 
-## Protocol (`protocol.rs`)
+## Protocol layer (`protocol/`)
 
 All command strings are compile-time constants or minimal stack-allocated formatting.
 No heap `String` allocation on hot paths.
@@ -198,7 +201,7 @@ Command response: strip echo line, extract value line if present.
 
 ---
 
-## Transport (`transport.rs`)
+## Transport layer (`transport/`)
 
 Internal only. Two threads (or async tasks) per open device:
 
@@ -206,7 +209,7 @@ Internal only. Two threads (or async tasks) per open device:
 
 - Tight read loop, feeds a state machine:
   - Tracks `km.` prefix in stream — next byte after it is always a button mask
-  - Accumulates bytes until `>>> ` — marks a complete command response
+  - Accumulates bytes until `>>>` + space — marks a complete command response
 - Button events sent via `broadcast::Sender<ButtonMask>`
 - Command responses routed to the waiting caller via a `oneshot` stored alongside
   the pending send
@@ -239,7 +242,7 @@ faster than the device processes them and responses become misaligned.
 Two ways to opt in:
 
 **Per-command:** a `.ff()` modifier on the device handle returns a wrapper that
-sends without waiting for `>>> `.
+sends without waiting for the `>>>` prompt.
 
 ```rust
 device.move_xy(10, 20)?;          // confirmed (default) — waits for >>>
@@ -306,7 +309,7 @@ impl Device {
     pub fn disable_button_stream(&self) -> Result<()>
     pub fn button_events(&self) -> broadcast::Receiver<ButtonMask>
 
-    // ── Batching ──────────────────────────────────────────────────────────────
+    // ── Batching ─────────────────────────────── feature = "batch" ───────────
     pub fn batch(&self) -> BatchBuilder<'_>
 }
 ```
@@ -526,3 +529,55 @@ pub fn reset();
   `ConnectionState::Reconnected` event and stops there. The application is
   responsible for re-enabling locks, the button stream, or anything else it needs.
   No hidden state restoration.
+
+---
+
+## Feature Comparison
+
+Legend: ✓ correct  ~ partial/limited  ✗ absent  ⚠ present but wrong/broken
+
+| Feature | makcu-cpp (C++) | makcu-rs (Rust, 3rd party) | **makcu** (ours) |
+|---------|:-:|:-:|:-:|
+| **Connection** |
+| Auto-detect device by VID/PID | ✓ | ✗ manual port only | ✓ |
+| Try 4 Mbaud first | ✗ always sends baud frame | ✗ stays at 115200 | ✓ |
+| Auto-reconnect | ✓ callback | ✗ | ✓ watch channel |
+| **Protocol correctness** |
+| Response terminator (`>>>` + space) | ⚠ uses `#id` suffix (ignored by firmware) | ⚠ uses `#id` suffix (ignored by firmware) | ✓ |
+| Zero-arg button = state query, not click | ✓ | ✗ treats as click | ✓ |
+| Button wire names (ms1/ms2) | ✓ | ~ unverified | ✓ |
+| Button stream: `km.` prefix parsing | ✓ | ~ unverified | ✓ handles 0x0A/0x0D |
+| Auto-enable button stream on connect | ⚠ yes (should not) | ✗ | ✓ explicit opt-in only |
+| **Firmware commands** |
+| Button down / up / force-release | ✓ | ~ no force-release | ✓ |
+| Button state query | ✓ | ✗ | ✓ |
+| Relative move | ✓ | ✓ | ✓ |
+| Silent move | ✗ | ✗ | ✓ |
+| Scroll wheel | ✓ | ✓ | ✓ |
+| Input locks (all 7) | ✓ | ✓ | ✓ |
+| Lock state query | ✓ cached (can go stale) | ✗ | ✓ always queries device |
+| Lock states — all at once | ✓ cached map | ✗ | ✓ 7 live queries |
+| Button event stream | ✓ | ~ callback only | ✓ broadcast channel |
+| Serial spoofing | ✓ get/set/reset | ~ set only | ✓ get/set/reset |
+| `km.catch_*` | ⚠ exposed (broken firmware) | ✗ | ✗ not exposed |
+| **Extras (software-implemented)** |
+| Click (press + delay + release) | ✓ | ⚠ uses `km.click()` (broken) | ✓ extras feature |
+| Click sequence (repeated clicks) | ✓ | ✗ | ✓ extras feature |
+| Smooth movement (software) | ⚠ uses broken firmware smooth | ✗ | ✓ extras feature |
+| Bezier movement | ⚠ uses broken firmware bezier | ✗ | ✗ not planned |
+| Drag | ✓ | ✗ | ✓ extras feature |
+| Move pattern (waypoint list) | ✓ | ✗ | ✓ extras feature |
+| Button press/release callbacks | ✓ | ✓ | ✓ extras feature |
+| **Architecture** |
+| Language | C++ | Rust | Rust |
+| Async support | ~ std::future (connect only) | ✓ tokio, full parity | ✓ tokio, full parity |
+| Batch command builder | ✓ | ✓ sync + async | ✓ sync + async, feature flag |
+| Fire-and-forget | ✓ default for move commands | ✓ default | ~ opt-in via `.ff()` |
+| No-lock hot path | ✗ mutex-based | ~ | ✓ channels + atomics |
+| Payload coalescing (batched writes) | ✗ | ✗ | ✓ writer thread drains queue |
+| Performance profiler | ✓ static, always-on | ~ optional feature | ✓ zero-cost when off |
+| Mock transport for testing | ✗ | ✓ mockserial feature | ✓ mock feature |
+| C API | ✓ full wrapper | ✗ | ✗ not planned |
+| **Error handling** |
+| Style | Exceptions | `Result<T, MakcuError>` | `Result<T, MakcuError>` |
+| Typed error variants | ~ exception hierarchy | ✓ | ✓ |
