@@ -1,0 +1,150 @@
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use std::time::Duration;
+
+use crate::types::{Button, ButtonMask};
+
+use crate::device::Device;
+
+/// Handle to a registered event callback. Dropping it unregisters the callback.
+pub struct EventHandle {
+    alive: Arc<AtomicBool>,
+}
+
+impl Drop for EventHandle {
+    fn drop(&mut self) {
+        self.alive.store(false, Ordering::Release);
+    }
+}
+
+/// Polling interval for event listener threads to check the `alive` flag.
+const POLL_INTERVAL: Duration = Duration::from_millis(50);
+
+impl Device {
+    /// Register a callback fired whenever the given button changes state.
+    ///
+    /// Spawns an internal listener thread that diffs the `ButtonMask` stream.
+    /// Returns a handle that unregisters the callback when dropped.
+    ///
+    /// `f` receives `true` when pressed, `false` when released.
+    pub fn on_button_press<F>(&self, button: Button, f: F) -> EventHandle
+    where
+        F: Fn(bool) + Send + 'static,
+    {
+        let alive = Arc::new(AtomicBool::new(true));
+        let alive_clone = Arc::clone(&alive);
+        let rx = self.button_events();
+
+        std::thread::Builder::new()
+            .name("makcu-event-press".into())
+            .spawn(move || {
+                let mut prev_state = false;
+                while alive_clone.load(Ordering::Acquire) {
+                    match rx.recv_timeout(POLL_INTERVAL) {
+                        Ok(mask) => {
+                            let current = mask.is_pressed(button);
+                            if current != prev_state {
+                                prev_state = current;
+                                f(current);
+                            }
+                        }
+                        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => continue,
+                        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+                    }
+                }
+            })
+            .ok();
+
+        EventHandle { alive }
+    }
+
+    /// Register a callback that fires on any button state change with the full mask.
+    pub fn on_button_event<F>(&self, f: F) -> EventHandle
+    where
+        F: Fn(ButtonMask) + Send + 'static,
+    {
+        let alive = Arc::new(AtomicBool::new(true));
+        let alive_clone = Arc::clone(&alive);
+        let rx = self.button_events();
+
+        std::thread::Builder::new()
+            .name("makcu-event-any".into())
+            .spawn(move || {
+                while alive_clone.load(Ordering::Acquire) {
+                    match rx.recv_timeout(POLL_INTERVAL) {
+                        Ok(mask) => f(mask),
+                        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => continue,
+                        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+                    }
+                }
+            })
+            .ok();
+
+        EventHandle { alive }
+    }
+}
+
+// -- Async --
+
+#[cfg(feature = "async")]
+use crate::device::AsyncDevice;
+
+#[cfg(feature = "async")]
+impl AsyncDevice {
+    /// Register a callback for button press/release (async — uses std thread for mpsc).
+    pub fn on_button_press<F>(&self, button: Button, f: F) -> EventHandle
+    where
+        F: Fn(bool) + Send + Sync + 'static,
+    {
+        let alive = Arc::new(AtomicBool::new(true));
+        let alive_clone = Arc::clone(&alive);
+        let rx = self.button_events();
+
+        std::thread::Builder::new()
+            .name("makcu-async-event-press".into())
+            .spawn(move || {
+                let mut prev_state = false;
+                while alive_clone.load(Ordering::Acquire) {
+                    match rx.recv_timeout(POLL_INTERVAL) {
+                        Ok(mask) => {
+                            let current = mask.is_pressed(button);
+                            if current != prev_state {
+                                prev_state = current;
+                                f(current);
+                            }
+                        }
+                        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => continue,
+                        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+                    }
+                }
+            })
+            .ok();
+
+        EventHandle { alive }
+    }
+
+    /// Register a callback for any button state change (async).
+    pub fn on_button_event<F>(&self, f: F) -> EventHandle
+    where
+        F: Fn(ButtonMask) + Send + Sync + 'static,
+    {
+        let alive = Arc::new(AtomicBool::new(true));
+        let alive_clone = Arc::clone(&alive);
+        let rx = self.button_events();
+
+        std::thread::Builder::new()
+            .name("makcu-async-event-any".into())
+            .spawn(move || {
+                while alive_clone.load(Ordering::Acquire) {
+                    match rx.recv_timeout(POLL_INTERVAL) {
+                        Ok(mask) => f(mask),
+                        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => continue,
+                        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+                    }
+                }
+            })
+            .ok();
+
+        EventHandle { alive }
+    }
+}

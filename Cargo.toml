@@ -9,6 +9,30 @@ license = "MIT"
 name = "makcu"
 path = "src/lib.rs"
 
+[features]
+default = []
+async = ["dep:tokio", "dep:tokio-serial"]
+batch = []
+extras = []
+profile = []
+mock = []
+
 [dependencies]
 serialport = "4"
 thiserror = "2"
+crossbeam-channel = "0.5"
+
+# Optional (async feature)
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "time", "sync", "macros"], optional = true }
+tokio-serial = { version = "5", optional = true }
+
+[[example]]
+name = "basic"
+
+[[example]]
+name = "comprehensive"
+required-features = ["async", "batch", "extras", "profile"]
+
+[[example]]
+name = "mock"
+required-features = ["mock"]
