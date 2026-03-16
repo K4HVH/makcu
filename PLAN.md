@@ -537,18 +537,18 @@ pub fn reset();
 Legend: ✓ correct  ~ partial/limited  ✗ absent  ⚠ present but wrong/broken
 
 | Feature | makcu-cpp (C++) | makcu-rs (Rust, 3rd party) | **makcu** (ours) |
-|---------|:-:|:-:|:-:|
-| **Connection** |
+| ------- | :-------------: | :------------------------: | :--------------: |
+| **Connection** | | | |
 | Auto-detect device by VID/PID | ✓ | ✗ manual port only | ✓ |
 | Try 4 Mbaud first | ✗ always sends baud frame | ✗ stays at 115200 | ✓ |
 | Auto-reconnect | ✓ callback | ✗ | ✓ watch channel |
-| **Protocol correctness** |
-| Response terminator (`>>>` + space) | ⚠ uses `#id` suffix (ignored by firmware) | ⚠ uses `#id` suffix (ignored by firmware) | ✓ |
+| **Protocol correctness** | | | |
+| Response terminator (`>>>` + space) | ⚠ uses `#id` suffix (ignored) | ⚠ uses `#id` suffix (ignored) | ✓ |
 | Zero-arg button = state query, not click | ✓ | ✗ treats as click | ✓ |
 | Button wire names (ms1/ms2) | ✓ | ~ unverified | ✓ |
 | Button stream: `km.` prefix parsing | ✓ | ~ unverified | ✓ handles 0x0A/0x0D |
 | Auto-enable button stream on connect | ⚠ yes (should not) | ✗ | ✓ explicit opt-in only |
-| **Firmware commands** |
+| **Firmware commands** | | | |
 | Button down / up / force-release | ✓ | ~ no force-release | ✓ |
 | Button state query | ✓ | ✗ | ✓ |
 | Relative move | ✓ | ✓ | ✓ |
@@ -560,7 +560,7 @@ Legend: ✓ correct  ~ partial/limited  ✗ absent  ⚠ present but wrong/broken
 | Button event stream | ✓ | ~ callback only | ✓ broadcast channel |
 | Serial spoofing | ✓ get/set/reset | ~ set only | ✓ get/set/reset |
 | `km.catch_*` | ⚠ exposed (broken firmware) | ✗ | ✗ not exposed |
-| **Extras (software-implemented)** |
+| **Extras (software-implemented)** | | | |
 | Click (press + delay + release) | ✓ | ⚠ uses `km.click()` (broken) | ✓ extras feature |
 | Click sequence (repeated clicks) | ✓ | ✗ | ✓ extras feature |
 | Smooth movement (software) | ⚠ uses broken firmware smooth | ✗ | ✓ extras feature |
@@ -568,7 +568,7 @@ Legend: ✓ correct  ~ partial/limited  ✗ absent  ⚠ present but wrong/broken
 | Drag | ✓ | ✗ | ✓ extras feature |
 | Move pattern (waypoint list) | ✓ | ✗ | ✓ extras feature |
 | Button press/release callbacks | ✓ | ✓ | ✓ extras feature |
-| **Architecture** |
+| **Architecture** | | | |
 | Language | C++ | Rust | Rust |
 | Async support | ~ std::future (connect only) | ✓ tokio, full parity | ✓ tokio, full parity |
 | Batch command builder | ✓ | ✓ sync + async | ✓ sync + async, feature flag |
@@ -578,6 +578,6 @@ Legend: ✓ correct  ~ partial/limited  ✗ absent  ⚠ present but wrong/broken
 | Performance profiler | ✓ static, always-on | ~ optional feature | ✓ zero-cost when off |
 | Mock transport for testing | ✗ | ✓ mockserial feature | ✓ mock feature |
 | C API | ✓ full wrapper | ✗ | ✗ not planned |
-| **Error handling** |
+| **Error handling** | | | |
 | Style | Exceptions | `Result<T, MakcuError>` | `Result<T, MakcuError>` |
 | Typed error variants | ~ exception hierarchy | ✓ | ✓ |
