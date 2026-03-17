@@ -36,13 +36,13 @@ impl<'d> BatchBuilder<'d> {
     }
 
     pub fn move_xy(mut self, x: i32, y: i32) -> Self {
-        let cmd = proto_builder::build_move(x, y);
+        let cmd = proto_builder::build_move(x, y).expect("move command overflow");
         self.steps.push(BatchStep::Native(cmd.as_bytes().to_vec()));
         self
     }
 
     pub fn silent_move(mut self, x: i32, y: i32) -> Self {
-        let cmd = proto_builder::build_silent_move(x, y);
+        let cmd = proto_builder::build_silent_move(x, y).expect("silent_move command overflow");
         self.steps.push(BatchStep::Native(cmd.as_bytes().to_vec()));
         self
     }
@@ -66,7 +66,7 @@ impl<'d> BatchBuilder<'d> {
     }
 
     pub fn wheel(mut self, delta: i32) -> Self {
-        let cmd = proto_builder::build_wheel(delta);
+        let cmd = proto_builder::build_wheel(delta).expect("wheel command overflow");
         self.steps.push(BatchStep::Native(cmd.as_bytes().to_vec()));
         self
     }
@@ -239,14 +239,14 @@ impl<'d> AsyncBatchBuilder<'d> {
     }
 
     pub fn move_xy(mut self, x: i32, y: i32) -> Self {
-        let cmd = proto_builder::build_move(x, y);
+        let cmd = proto_builder::build_move(x, y).expect("move command overflow");
         self.steps
             .push(AsyncBatchStep::Native(cmd.as_bytes().to_vec()));
         self
     }
 
     pub fn silent_move(mut self, x: i32, y: i32) -> Self {
-        let cmd = proto_builder::build_silent_move(x, y);
+        let cmd = proto_builder::build_silent_move(x, y).expect("silent_move command overflow");
         self.steps
             .push(AsyncBatchStep::Native(cmd.as_bytes().to_vec()));
         self
@@ -272,7 +272,7 @@ impl<'d> AsyncBatchBuilder<'d> {
     }
 
     pub fn wheel(mut self, delta: i32) -> Self {
-        let cmd = proto_builder::build_wheel(delta);
+        let cmd = proto_builder::build_wheel(delta).expect("wheel command overflow");
         self.steps
             .push(AsyncBatchStep::Native(cmd.as_bytes().to_vec()));
         self

@@ -11,6 +11,14 @@ pub struct EventHandle {
     alive: Arc<AtomicBool>,
 }
 
+impl std::fmt::Debug for EventHandle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("EventHandle")
+            .field("active", &self.alive.load(Ordering::Relaxed))
+            .finish()
+    }
+}
+
 impl Drop for EventHandle {
     fn drop(&mut self) {
         self.alive.store(false, Ordering::Release);
@@ -53,7 +61,7 @@ impl Device {
                     }
                 }
             })
-            .ok();
+            .expect("failed to spawn makcu event listener thread");
 
         EventHandle { alive }
     }
@@ -78,7 +86,7 @@ impl Device {
                     }
                 }
             })
-            .ok();
+            .expect("failed to spawn makcu event listener thread");
 
         EventHandle { alive }
     }
@@ -94,7 +102,7 @@ impl AsyncDevice {
     /// Register a callback for button press/release (async — uses std thread for mpsc).
     pub fn on_button_press<F>(&self, button: Button, f: F) -> EventHandle
     where
-        F: Fn(bool) + Send + Sync + 'static,
+        F: Fn(bool) + Send + 'static,
     {
         let alive = Arc::new(AtomicBool::new(true));
         let alive_clone = Arc::clone(&alive);
@@ -118,7 +126,7 @@ impl AsyncDevice {
                     }
                 }
             })
-            .ok();
+            .expect("failed to spawn makcu event listener thread");
 
         EventHandle { alive }
     }
@@ -126,7 +134,7 @@ impl AsyncDevice {
     /// Register a callback for any button state change (async).
     pub fn on_button_event<F>(&self, f: F) -> EventHandle
     where
-        F: Fn(ButtonMask) + Send + Sync + 'static,
+        F: Fn(ButtonMask) + Send + 'static,
     {
         let alive = Arc::new(AtomicBool::new(true));
         let alive_clone = Arc::clone(&alive);
@@ -143,7 +151,7 @@ impl AsyncDevice {
                     }
                 }
             })
-            .ok();
+            .expect("failed to spawn makcu event listener thread");
 
         EventHandle { alive }
     }
