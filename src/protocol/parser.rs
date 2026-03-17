@@ -155,7 +155,11 @@ pub enum ResponseKind {
 fn trim_bytes(b: &[u8]) -> &[u8] {
     let is_ws = |&x: &u8| x == b'\r' || x == b'\n' || x == b' ';
     let start = b.iter().position(|x| !is_ws(x)).unwrap_or(b.len());
-    let end = b.iter().rposition(|x| !is_ws(x)).map(|i| i + 1).unwrap_or(0);
+    let end = b
+        .iter()
+        .rposition(|x| !is_ws(x))
+        .map(|i| i + 1)
+        .unwrap_or(0);
     if start >= end { &[] } else { &b[start..end] }
 }
 
@@ -276,7 +280,10 @@ mod tests {
     #[test]
     fn classify_value_multiline() {
         let resp = b"km.left()\r\n1";
-        assert_eq!(classify_response(resp), ResponseKind::Value("1".to_string()));
+        assert_eq!(
+            classify_response(resp),
+            ResponseKind::Value("1".to_string())
+        );
     }
 
     #[test]

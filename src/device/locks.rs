@@ -8,7 +8,10 @@ use super::{Device, FireAndForget};
 impl Device {
     /// Lock or unlock a mouse input.
     pub fn set_lock(&self, target: LockTarget, locked: bool) -> Result<()> {
-        timed!("set_lock", self.exec(constants::lock_set_cmd(target, locked)))
+        timed!(
+            "set_lock",
+            self.exec(constants::lock_set_cmd(target, locked))
+        )
     }
 
     /// Query whether a lock is currently active.

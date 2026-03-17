@@ -8,10 +8,11 @@ use crate::protocol::constants::*;
 
 /// Open a serial port, try 4M baud first, fall back to baud-change sequence.
 /// Returns the opened port and the firmware version string.
-pub fn establish_connection(port_name: &str, try_4m_first: bool) -> Result<(Box<dyn SerialPort>, String)> {
-    if try_4m_first
-        && let Ok(result) = try_connect(port_name, BAUD_4M)
-    {
+pub fn establish_connection(
+    port_name: &str,
+    try_4m_first: bool,
+) -> Result<(Box<dyn SerialPort>, String)> {
+    if try_4m_first && let Ok(result) = try_connect(port_name, BAUD_4M) {
         return Ok(result);
     }
 
@@ -52,7 +53,9 @@ pub fn establish_connection(port_name: &str, try_4m_first: bool) -> Result<(Box<
         }
     }
 
-    Err(MakcuError::Protocol("failed to connect after baud change".into()))
+    Err(MakcuError::Protocol(
+        "failed to connect after baud change".into(),
+    ))
 }
 
 /// Find the first serial port matching the MAKCU VID/PID.
@@ -60,7 +63,8 @@ pub fn find_port() -> Result<String> {
     let ports = serialport::available_ports().map_err(MakcuError::Port)?;
     for port in ports {
         if let serialport::SerialPortType::UsbPort(info) = port.port_type
-            && info.vid == USB_VID && info.pid == USB_PID
+            && info.vid == USB_VID
+            && info.pid == USB_PID
         {
             return Ok(port.port_name);
         }

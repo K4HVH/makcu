@@ -67,7 +67,9 @@ impl AsyncDevice {
     }
 
     pub async fn serial(&self) -> Result<String> {
-        self.query(constants::CMD_SERIAL_GET).await.map(strip_km_prefix)
+        self.query(constants::CMD_SERIAL_GET)
+            .await
+            .map(strip_km_prefix)
     }
 
     /// Spoof the mouse serial number. Returns the device's response.
@@ -76,10 +78,14 @@ impl AsyncDevice {
     pub async fn set_serial(&self, value: &str) -> Result<String> {
         let cmd = builder::build_serial_set(value)
             .ok_or_else(|| MakcuError::Protocol("serial value too long".into()))?;
-        self.query_dynamic(cmd.as_bytes()).await.map(strip_km_prefix)
+        self.query_dynamic(cmd.as_bytes())
+            .await
+            .map(strip_km_prefix)
     }
 
     pub async fn reset_serial(&self) -> Result<String> {
-        self.query(constants::CMD_SERIAL_RESET).await.map(strip_km_prefix)
+        self.query(constants::CMD_SERIAL_RESET)
+            .await
+            .map(strip_km_prefix)
     }
 }

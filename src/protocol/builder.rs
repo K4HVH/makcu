@@ -26,7 +26,9 @@ pub fn build_move(x: i32, y: i32) -> Option<CommandBuf> {
     let mut cmd = CommandBuf::new();
     let _ = write!(&mut cmd.buf[..], "km.move({},{})\r\n", x, y);
     cmd.len = fmt_len(&cmd.buf);
-    if cmd.len == 0 { return None; }
+    if cmd.len == 0 {
+        return None;
+    }
     Some(cmd)
 }
 
@@ -35,7 +37,9 @@ pub fn build_silent_move(x: i32, y: i32) -> Option<CommandBuf> {
     let mut cmd = CommandBuf::new();
     let _ = write!(&mut cmd.buf[..], "km.silent({},{})\r\n", x, y);
     cmd.len = fmt_len(&cmd.buf);
-    if cmd.len == 0 { return None; }
+    if cmd.len == 0 {
+        return None;
+    }
     Some(cmd)
 }
 
@@ -44,7 +48,9 @@ pub fn build_wheel(delta: i32) -> Option<CommandBuf> {
     let mut cmd = CommandBuf::new();
     let _ = write!(&mut cmd.buf[..], "km.wheel({})\r\n", delta);
     cmd.len = fmt_len(&cmd.buf);
-    if cmd.len == 0 { return None; }
+    if cmd.len == 0 {
+        return None;
+    }
     Some(cmd)
 }
 

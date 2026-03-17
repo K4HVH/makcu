@@ -1,5 +1,10 @@
 # makcu
 
+[![Crates.io](https://img.shields.io/crates/v/makcu)](https://crates.io/crates/makcu)
+[![Docs](https://img.shields.io/badge/docs-makcu.k4tech.net-blue)](https://makcu.k4tech.net)
+[![CI](https://img.shields.io/github/actions/workflow/status/K4HVH/makcu/ci.yml?label=CI)](https://github.com/K4HVH/makcu/actions)
+[![License](https://img.shields.io/crates/l/makcu)](./LICENSE)
+
 A Rust library for controlling MAKCU USB HID interceptor devices.
 
 MAKCU devices are small USB dongles that sit between a mouse and a host PC, allowing programmatic mouse control — cursor movement, button presses, scroll, input locking, and more — via serial commands over USB.

@@ -1,9 +1,9 @@
+#[cfg(feature = "mock")]
+pub mod mock;
+pub(crate) mod monitor;
 pub(crate) mod reader;
 pub(crate) mod serial;
 pub(crate) mod writer;
-pub(crate) mod monitor;
-#[cfg(feature = "mock")]
-pub mod mock;
 
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};

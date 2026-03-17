@@ -14,11 +14,11 @@
 //! dev.button_up(Button::Left).unwrap();
 //! ```
 
+mod device;
 pub mod error;
-pub mod types;
 pub(crate) mod protocol;
 pub(crate) mod transport;
-mod device;
+pub mod types;
 
 #[cfg(feature = "batch")]
 pub mod batch;
