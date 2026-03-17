@@ -126,6 +126,8 @@ device.batch()
     .execute()?;
 ```
 
+The firmware processes commands sequentially from its serial buffer — batching doesn't skip or merge commands. It just eliminates the inter-command gap on the host side by delivering all the bytes in one write, so the firmware always has the next command ready to read immediately.
+
 ### Extras (feature = `extras`)
 
 Software-implemented operations with timing control:
@@ -232,16 +234,18 @@ Communication is at 4 Mbaud over USB-serial (CH340/CH343 chip). The library auto
 
 ## Performance
 
-| Metric | makcu | makcu-cpp | makcu-rs\* |
+All numbers are averages of 3 runs on the same device (Linux, CH340 USB-serial).
+
+| Metric | makcu | makcu-cpp | makcu-rs |
 | --- | --- | --- | --- |
 | **Baud rate** | 4 Mbaud | 4 Mbaud | 115,200 |
-| **Confirmed round-trip** | ~999 us | Not measured | Not measured |
-| **F&F move (fenced, 100x)** | ~10 us/cmd | ~40 us/cmd | ~0.0 us (claimed) |
-| **F&F move (fenced, 1000x)** | ~10 us/cmd | — | — |
-| **Batch 10 cmds** | ~1000 us total | <100 us (claimed) | 0.5 us (claimed) |
-| **Batch 50 cmds (coalesced)** | ~13 us total | — | — |
+| **What is measured** | Real serial I/O | Serial write+flush | Channel enqueue\* |
+| **Confirmed round-trip (move)** | 999 us | N/A | N/A |
+| **100 rapid F&F moves** | 1333 us total | 4647 us total | 27 us total\* |
+| **Batch 10 cmds** | 16 us total | 470 us total | 3 us total\* |
+| **Batch 50 moves** | 12 us total | 2635 us total | 6 us total\* |
 
-\*makcu-rs benchmarks measure channel enqueue time, not serial I/O. The profiler stops the timer before bytes reach the serial port, producing the claimed "~0.0 us" figures.
+\*makcu-rs measures channel enqueue time, not serial I/O — the timer stops before bytes reach the serial port, producing sub-microsecond figures that don't reflect actual device latency.
 
 Run `cargo run --example benchmark --release --features "batch,extras"` to reproduce.
 
