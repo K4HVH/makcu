@@ -9,13 +9,7 @@ impl Device {
     /// Smooth movement via repeated `move_xy` calls.
     ///
     /// Total distance is divided evenly across `steps`, remainder on last step.
-    pub fn move_smooth(
-        &self,
-        x: i32,
-        y: i32,
-        steps: u32,
-        interval: Duration,
-    ) -> Result<()> {
+    pub fn move_smooth(&self, x: i32, y: i32, steps: u32, interval: Duration) -> Result<()> {
         if steps == 0 {
             return self.move_xy(x, y);
         }
@@ -26,8 +20,16 @@ impl Device {
         let rem_y = y - step_y * steps as i32;
 
         for i in 0..steps {
-            let dx = if i == steps - 1 { step_x + rem_x } else { step_x };
-            let dy = if i == steps - 1 { step_y + rem_y } else { step_y };
+            let dx = if i == steps - 1 {
+                step_x + rem_x
+            } else {
+                step_x
+            };
+            let dy = if i == steps - 1 {
+                step_y + rem_y
+            } else {
+                step_y
+            };
             self.move_xy(dx, dy)?;
             if i + 1 < steps {
                 std::thread::sleep(interval);
@@ -71,13 +73,7 @@ use crate::device::AsyncDevice;
 #[cfg(feature = "async")]
 impl AsyncDevice {
     /// Smooth movement via repeated `move_xy` calls (async).
-    pub async fn move_smooth(
-        &self,
-        x: i32,
-        y: i32,
-        steps: u32,
-        interval: Duration,
-    ) -> Result<()> {
+    pub async fn move_smooth(&self, x: i32, y: i32, steps: u32, interval: Duration) -> Result<()> {
         if steps == 0 {
             return self.move_xy(x, y).await;
         }
@@ -88,8 +84,16 @@ impl AsyncDevice {
         let rem_y = y - step_y * steps as i32;
 
         for i in 0..steps {
-            let dx = if i == steps - 1 { step_x + rem_x } else { step_x };
-            let dy = if i == steps - 1 { step_y + rem_y } else { step_y };
+            let dx = if i == steps - 1 {
+                step_x + rem_x
+            } else {
+                step_x
+            };
+            let dy = if i == steps - 1 {
+                step_y + rem_y
+            } else {
+                step_y
+            };
             self.move_xy(dx, dy).await?;
             if i + 1 < steps {
                 tokio::time::sleep(interval).await;

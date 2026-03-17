@@ -45,8 +45,10 @@ async fn main() -> Result<()> {
         reconnect_backoff: Duration::from_millis(100),
         fire_and_forget: false,
     };
-    println!("  DeviceConfig: timeout={:?}, reconnect={}, ff={}",
-        custom_cfg.command_timeout, custom_cfg.reconnect, custom_cfg.fire_and_forget);
+    println!(
+        "  DeviceConfig: timeout={:?}, reconnect={}, ff={}",
+        custom_cfg.command_timeout, custom_cfg.reconnect, custom_cfg.fire_and_forget
+    );
     pause().await;
 
     // =========================================================================
@@ -171,8 +173,10 @@ async fn main() -> Result<()> {
     println!("  All unlocked");
 
     let all = device.lock_states_all().await?;
-    println!("  lock_states_all: x={}, y={}, left={}, right={}, mid={}, s1={}, s2={}",
-        all.x, all.y, all.left, all.right, all.middle, all.side1, all.side2);
+    println!(
+        "  lock_states_all: x={}, y={}, left={}, right={}, mid={}, s1={}, s2={}",
+        all.x, all.y, all.left, all.right, all.middle, all.side1, all.side2
+    );
     pause().await;
 
     // =========================================================================
@@ -190,8 +194,14 @@ async fn main() -> Result<()> {
     let mut count = 0;
     while let Ok(mask) = rx.try_recv() {
         if count < 5 {
-            println!("  Event: left={}, right={}, mid={}, s1={}, s2={}",
-                mask.left(), mask.right(), mask.middle(), mask.side1(), mask.side2());
+            println!(
+                "  Event: left={}, right={}, mid={}, s1={}, s2={}",
+                mask.left(),
+                mask.right(),
+                mask.middle(),
+                mask.side1(),
+                mask.side2()
+            );
         }
         count += 1;
     }
@@ -269,11 +279,20 @@ async fn main() -> Result<()> {
     println!("\n--- 10. Extras: Click ---");
 
     println!("  click(Middle, 50ms)...");
-    device.click(Button::Middle, Duration::from_millis(50)).await?;
+    device
+        .click(Button::Middle, Duration::from_millis(50))
+        .await?;
     pause().await;
 
     println!("  click_sequence(Middle, 50ms hold, x3, 200ms interval)...");
-    device.click_sequence(Button::Middle, Duration::from_millis(50), 3, Duration::from_millis(200)).await?;
+    device
+        .click_sequence(
+            Button::Middle,
+            Duration::from_millis(50),
+            3,
+            Duration::from_millis(200),
+        )
+        .await?;
     pause().await;
 
     // =========================================================================
@@ -282,24 +301,34 @@ async fn main() -> Result<()> {
     println!("\n--- 11. Extras: Smooth Movement ---");
 
     println!("  move_smooth: right 150 (15 steps)...");
-    device.move_smooth(150, 0, 15, Duration::from_millis(20)).await?;
+    device
+        .move_smooth(150, 0, 15, Duration::from_millis(20))
+        .await?;
     pause().await;
 
     println!("  move_smooth: back left 150...");
-    device.move_smooth(-150, 0, 15, Duration::from_millis(20)).await?;
+    device
+        .move_smooth(-150, 0, 15, Duration::from_millis(20))
+        .await?;
     pause().await;
 
     println!("  drag(Left): right 100 (10 steps)...");
-    device.drag(Button::Left, 100, 0, 10, Duration::from_millis(20)).await?;
+    device
+        .drag(Button::Left, 100, 0, 10, Duration::from_millis(20))
+        .await?;
     pause().await;
 
     println!("  drag(Left): back left 100...");
-    device.drag(Button::Left, -100, 0, 10, Duration::from_millis(20)).await?;
+    device
+        .drag(Button::Left, -100, 0, 10, Duration::from_millis(20))
+        .await?;
     pause().await;
 
     println!("  move_pattern: square (40px sides)...");
     let waypoints = vec![(40, 0), (0, 40), (-40, 0), (0, -40)];
-    device.move_pattern(&waypoints, 5, Duration::from_millis(20)).await?;
+    device
+        .move_pattern(&waypoints, 5, Duration::from_millis(20))
+        .await?;
     pause().await;
 
     // =========================================================================
@@ -310,7 +339,10 @@ async fn main() -> Result<()> {
     device.enable_button_stream().await?;
 
     let h1: EventHandle = device.on_button_press(Button::Left, |pressed| {
-        println!("    [callback] Left: {}", if pressed { "down" } else { "up" });
+        println!(
+            "    [callback] Left: {}",
+            if pressed { "down" } else { "up" }
+        );
     });
     println!("  on_button_press(Left) registered");
 
@@ -365,8 +397,17 @@ async fn main() -> Result<()> {
         .move_xy(10, 0)
         .click(Button::Middle, Duration::from_millis(30))
         .move_smooth(50, 0, 5, Duration::from_millis(15))
-        .click_sequence(Button::Middle, Duration::from_millis(30), 2, Duration::from_millis(100))
-        .move_pattern(vec![(20, 0), (0, 20), (-20, 0), (0, -20)], 3, Duration::from_millis(15))
+        .click_sequence(
+            Button::Middle,
+            Duration::from_millis(30),
+            2,
+            Duration::from_millis(100),
+        )
+        .move_pattern(
+            vec![(20, 0), (0, 20), (-20, 0), (0, -20)],
+            3,
+            Duration::from_millis(15),
+        )
         .drag(Button::Left, 40, 0, 4, Duration::from_millis(15))
         .move_xy(-120, -20)
         .button_up(Button::Left)
@@ -388,8 +429,10 @@ async fn main() -> Result<()> {
     let stats = makcu::profiler::stats();
     println!("  {} command types profiled:", stats.len());
     for (name, stat) in &stats {
-        println!("    {}: count={}, avg={}us, min={}us, max={}us",
-            name, stat.count, stat.avg_us as u64, stat.min_us, stat.max_us);
+        println!(
+            "    {}: count={}, avg={}us, min={}us, max={}us",
+            name, stat.count, stat.avg_us as u64, stat.min_us, stat.max_us
+        );
     }
 
     makcu::profiler::reset();

@@ -94,7 +94,12 @@ fn main() -> Result<()> {
     let rx = device.button_events();
     sleep(Duration::from_secs(2));
     match rx.try_recv() {
-        Ok(mask) => println!("Button event: left={}, right={}, mid={}", mask.left(), mask.right(), mask.middle()),
+        Ok(mask) => println!(
+            "Button event: left={}, right={}, mid={}",
+            mask.left(),
+            mask.right(),
+            mask.middle()
+        ),
         Err(_) => println!("No button events received"),
     }
     device.disable_button_stream()?;

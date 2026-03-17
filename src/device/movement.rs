@@ -54,15 +54,18 @@ use super::{AsyncDevice, AsyncFireAndForget};
 #[cfg(feature = "async")]
 impl AsyncDevice {
     pub async fn move_xy(&self, x: i32, y: i32) -> Result<()> {
-        self.exec_dynamic(cmd(builder::build_move(x, y))?.as_bytes()).await
+        self.exec_dynamic(cmd(builder::build_move(x, y))?.as_bytes())
+            .await
     }
 
     pub async fn silent_move(&self, x: i32, y: i32) -> Result<()> {
-        self.exec_dynamic(cmd(builder::build_silent_move(x, y))?.as_bytes()).await
+        self.exec_dynamic(cmd(builder::build_silent_move(x, y))?.as_bytes())
+            .await
     }
 
     pub async fn wheel(&self, delta: i32) -> Result<()> {
-        self.exec_dynamic(cmd(builder::build_wheel(delta))?.as_bytes()).await
+        self.exec_dynamic(cmd(builder::build_wheel(delta))?.as_bytes())
+            .await
     }
 }
 

@@ -117,7 +117,11 @@ fn main() -> Result<()> {
     device.move_xy(0, 0)?;
 
     match rx.try_recv() {
-        Ok(mask) => println!("Received injected event: left={}, right={}", mask.left(), mask.right()),
+        Ok(mask) => println!(
+            "Received injected event: left={}, right={}",
+            mask.left(),
+            mask.right()
+        ),
         Err(_) => println!("No event received (timing dependent)"),
     }
 
@@ -139,7 +143,10 @@ fn main() -> Result<()> {
     mock.clear_sent();
     device.move_xy(1, 1)?;
     assert_eq!(mock.sent_commands().len(), 1);
-    println!("\nAfter clear + 1 command: {} sent", mock.sent_commands().len());
+    println!(
+        "\nAfter clear + 1 command: {} sent",
+        mock.sent_commands().len()
+    );
 
     // -------------------------------------------------------------------------
     // Disconnect

@@ -2,8 +2,15 @@
 name = "makcu"
 version = "0.1.0"
 edition = "2024"
-description = "Rust library for controlling MAKCU devices"
+rust-version = "1.85"
+description = "Rust library for controlling MAKCU USB HID interceptor devices"
 license = "MIT"
+repository = "https://github.com/K4HVH/makcu"
+homepage = "https://makcu.k4tech.net"
+documentation = "https://makcu.k4tech.net"
+readme = "README.md"
+keywords = ["makcu", "hid", "mouse", "serial", "usb"]
+categories = ["hardware-support", "api-bindings"]
 
 [lib]
 name = "makcu"

@@ -9,8 +9,8 @@ use std::time::Duration;
 
 use crate::error::{MakcuError, Result};
 use crate::protocol::parser::{self, ResponseKind};
-use crate::transport::serial;
 use crate::transport::TransportHandle;
+use crate::transport::serial;
 use crate::types::ConnectionState;
 
 /// Default command timeout.
@@ -98,8 +98,12 @@ impl Device {
             None => serial::find_port()?,
         };
 
-        let transport =
-            TransportHandle::connect(port_name, config.try_4m_first, config.reconnect, config.reconnect_backoff)?;
+        let transport = TransportHandle::connect(
+            port_name,
+            config.try_4m_first,
+            config.reconnect,
+            config.reconnect_backoff,
+        )?;
 
         Ok(Self { transport, config })
     }
@@ -134,7 +138,11 @@ impl Device {
     /// The `\r\n` terminator must already be included.
     pub fn send_raw(&self, cmd: &[u8]) -> Result<Vec<u8>> {
         self.transport
-            .send_static(cmd, self.config.fire_and_forget, self.config.command_timeout)?
+            .send_static(
+                cmd,
+                self.config.fire_and_forget,
+                self.config.command_timeout,
+            )?
             .ok_or(MakcuError::Protocol(
                 "expected response but got fire-and-forget".into(),
             ))
@@ -156,9 +164,9 @@ impl Device {
         }
         let raw = self.send_raw(cmd)?;
         match parser::classify_response(&raw) {
-            ResponseKind::Executed
-            | ResponseKind::ValueOrEcho(_)
-            | ResponseKind::Value(_) => Ok(()),
+            ResponseKind::Executed | ResponseKind::ValueOrEcho(_) | ResponseKind::Value(_) => {
+                Ok(())
+            }
         }
     }
 
@@ -229,9 +237,11 @@ impl FireAndForget<'_> {
     }
 
     pub(crate) fn send_dynamic(&self, cmd: &[u8]) -> Result<()> {
-        self.device
-            .transport
-            .send_command(cmd.to_vec(), true, self.device.config.command_timeout)?;
+        self.device.transport.send_command(
+            cmd.to_vec(),
+            true,
+            self.device.config.command_timeout,
+        )?;
         Ok(())
     }
 }
@@ -280,8 +290,12 @@ impl AsyncDevice {
                 Some(p) => p.clone(),
                 None => serial::find_port()?,
             };
-            let transport =
-                TransportHandle::connect(port_name, cfg.try_4m_first, cfg.reconnect, cfg.reconnect_backoff)?;
+            let transport = TransportHandle::connect(
+                port_name,
+                cfg.try_4m_first,
+                cfg.reconnect,
+                cfg.reconnect_backoff,
+            )?;
             Ok((transport, cfg))
         })
         .await
@@ -318,7 +332,11 @@ impl AsyncDevice {
     /// Send raw command bytes (async escape hatch).
     pub async fn send_raw(&self, cmd: &[u8]) -> Result<Vec<u8>> {
         self.transport
-            .send_static_async(cmd, self.config.fire_and_forget, self.config.command_timeout)
+            .send_static_async(
+                cmd,
+                self.config.fire_and_forget,
+                self.config.command_timeout,
+            )
             .await?
             .ok_or(MakcuError::Protocol(
                 "expected response but got fire-and-forget".into(),
@@ -341,9 +359,9 @@ impl AsyncDevice {
         }
         let raw = self.send_raw(cmd).await?;
         match parser::classify_response(&raw) {
-            ResponseKind::Executed
-            | ResponseKind::ValueOrEcho(_)
-            | ResponseKind::Value(_) => Ok(()),
+            ResponseKind::Executed | ResponseKind::ValueOrEcho(_) | ResponseKind::Value(_) => {
+                Ok(())
+            }
         }
     }
 
@@ -418,9 +436,11 @@ impl AsyncFireAndForget<'_> {
     }
 
     pub(crate) fn send_dynamic(&self, cmd: &[u8]) -> Result<()> {
-        self.device
-            .transport
-            .send_command(cmd.to_vec(), true, self.device.config.command_timeout)?;
+        self.device.transport.send_command(
+            cmd.to_vec(),
+            true,
+            self.device.config.command_timeout,
+        )?;
         Ok(())
     }
 }

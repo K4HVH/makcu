@@ -48,8 +48,9 @@ impl<'d> BatchBuilder<'d> {
     }
 
     pub fn button_down(mut self, button: Button) -> Self {
-        self.steps
-            .push(BatchStep::Native(constants::button_down_cmd(button).to_vec()));
+        self.steps.push(BatchStep::Native(
+            constants::button_down_cmd(button).to_vec(),
+        ));
         self
     }
 
@@ -60,8 +61,9 @@ impl<'d> BatchBuilder<'d> {
     }
 
     pub fn button_up_force(mut self, button: Button) -> Self {
-        self.steps
-            .push(BatchStep::Native(constants::button_force_up_cmd(button).to_vec()));
+        self.steps.push(BatchStep::Native(
+            constants::button_force_up_cmd(button).to_vec(),
+        ));
         self
     }
 
@@ -72,8 +74,9 @@ impl<'d> BatchBuilder<'d> {
     }
 
     pub fn set_lock(mut self, target: LockTarget, locked: bool) -> Self {
-        self.steps
-            .push(BatchStep::Native(constants::lock_set_cmd(target, locked).to_vec()));
+        self.steps.push(BatchStep::Native(
+            constants::lock_set_cmd(target, locked).to_vec(),
+        ));
         self
     }
 
@@ -141,13 +144,7 @@ impl<'d> BatchBuilder<'d> {
         self
     }
 
-    pub fn move_smooth(
-        mut self,
-        x: i32,
-        y: i32,
-        steps: u32,
-        interval: Duration,
-    ) -> Self {
+    pub fn move_smooth(mut self, x: i32, y: i32, steps: u32, interval: Duration) -> Self {
         self.steps.push(BatchStep::Extras(Box::new(move |dev| {
             dev.move_smooth(x, y, steps, interval)
         })));
@@ -166,14 +163,7 @@ impl<'d> BatchBuilder<'d> {
         self
     }
 
-    pub fn drag(
-        mut self,
-        button: Button,
-        x: i32,
-        y: i32,
-        steps: u32,
-        interval: Duration,
-    ) -> Self {
+    pub fn drag(mut self, button: Button, x: i32, y: i32, steps: u32, interval: Duration) -> Self {
         self.steps.push(BatchStep::Extras(Box::new(move |dev| {
             dev.drag(button, x, y, steps, interval)
         })));
@@ -192,7 +182,10 @@ use crate::device::AsyncDevice;
 enum AsyncBatchStep {
     Native(Vec<u8>),
     #[cfg(feature = "extras")]
-    Click { button: Button, hold: Duration },
+    Click {
+        button: Button,
+        hold: Duration,
+    },
     #[cfg(feature = "extras")]
     ClickSequence {
         button: Button,
@@ -253,14 +246,16 @@ impl<'d> AsyncBatchBuilder<'d> {
     }
 
     pub fn button_down(mut self, button: Button) -> Self {
-        self.steps
-            .push(AsyncBatchStep::Native(constants::button_down_cmd(button).to_vec()));
+        self.steps.push(AsyncBatchStep::Native(
+            constants::button_down_cmd(button).to_vec(),
+        ));
         self
     }
 
     pub fn button_up(mut self, button: Button) -> Self {
-        self.steps
-            .push(AsyncBatchStep::Native(constants::button_up_cmd(button).to_vec()));
+        self.steps.push(AsyncBatchStep::Native(
+            constants::button_up_cmd(button).to_vec(),
+        ));
         self
     }
 
@@ -403,14 +398,7 @@ impl<'d> AsyncBatchBuilder<'d> {
         self
     }
 
-    pub fn drag(
-        mut self,
-        button: Button,
-        x: i32,
-        y: i32,
-        steps: u32,
-        interval: Duration,
-    ) -> Self {
+    pub fn drag(mut self, button: Button, x: i32, y: i32, steps: u32, interval: Duration) -> Self {
         self.steps.push(AsyncBatchStep::Drag {
             button,
             x,
