@@ -36,3 +36,7 @@ required-features = ["async", "batch", "extras", "profile"]
 [[example]]
 name = "mock"
 required-features = ["mock"]
+
+[[example]]
+name = "benchmark"
+required-features = ["batch", "extras"]
