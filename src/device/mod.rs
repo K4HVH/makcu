@@ -59,6 +59,15 @@ pub struct Device {
     config: DeviceConfig,
 }
 
+impl std::fmt::Debug for Device {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Device")
+            .field("port", &self.transport.port_name())
+            .field("connected", &self.transport.is_connected())
+            .finish()
+    }
+}
+
 // Compile-time assertions that Device is Send + Sync.
 #[allow(dead_code)]
 const _: () = {
@@ -235,6 +244,16 @@ impl FireAndForget<'_> {
 pub struct AsyncDevice {
     transport: TransportHandle,
     config: DeviceConfig,
+}
+
+#[cfg(feature = "async")]
+impl std::fmt::Debug for AsyncDevice {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AsyncDevice")
+            .field("port", &self.transport.port_name())
+            .field("connected", &self.transport.is_connected())
+            .finish()
+    }
 }
 
 #[cfg(feature = "async")]

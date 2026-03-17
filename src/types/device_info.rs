@@ -5,6 +5,12 @@ pub struct DeviceInfo {
     pub firmware: String,
 }
 
+impl std::fmt::Display for DeviceInfo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} (firmware: {})", self.port, self.firmware)
+    }
+}
+
 /// Connection state, observable via `Device::connection_events()`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]

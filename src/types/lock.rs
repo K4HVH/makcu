@@ -14,7 +14,7 @@ pub enum LockTarget {
 }
 
 /// Snapshot of all seven lock states, returned by `lock_states_all()`.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct LockStates {
     pub x: bool,
     pub y: bool,

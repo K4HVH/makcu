@@ -20,28 +20,32 @@ impl CommandBuf {
     }
 }
 
-/// Build `km.move(x,y)\r\n`
-pub fn build_move(x: i32, y: i32) -> CommandBuf {
+/// Build `km.move(x,y)\r\n`. Returns `None` if the formatted command
+/// exceeds the 64-byte stack buffer (only possible with extreme values).
+pub fn build_move(x: i32, y: i32) -> Option<CommandBuf> {
     let mut cmd = CommandBuf::new();
     let _ = write!(&mut cmd.buf[..], "km.move({},{})\r\n", x, y);
     cmd.len = fmt_len(&cmd.buf);
-    cmd
+    if cmd.len == 0 { return None; }
+    Some(cmd)
 }
 
-/// Build `km.silent(x,y)\r\n`
-pub fn build_silent_move(x: i32, y: i32) -> CommandBuf {
+/// Build `km.silent(x,y)\r\n`.
+pub fn build_silent_move(x: i32, y: i32) -> Option<CommandBuf> {
     let mut cmd = CommandBuf::new();
     let _ = write!(&mut cmd.buf[..], "km.silent({},{})\r\n", x, y);
     cmd.len = fmt_len(&cmd.buf);
-    cmd
+    if cmd.len == 0 { return None; }
+    Some(cmd)
 }
 
-/// Build `km.wheel(delta)\r\n`
-pub fn build_wheel(delta: i32) -> CommandBuf {
+/// Build `km.wheel(delta)\r\n`.
+pub fn build_wheel(delta: i32) -> Option<CommandBuf> {
     let mut cmd = CommandBuf::new();
     let _ = write!(&mut cmd.buf[..], "km.wheel({})\r\n", delta);
     cmd.len = fmt_len(&cmd.buf);
-    cmd
+    if cmd.len == 0 { return None; }
+    Some(cmd)
 }
 
 /// Build `km.serial('value')\r\n`
