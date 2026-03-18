@@ -1,5 +1,12 @@
 use std::io::Write;
 
+use crate::error::{MakcuError, Result};
+
+/// Maximum absolute value for move/silent_move coordinates (firmware limit).
+pub const MOVE_RANGE: i32 = 32767;
+/// Maximum absolute value for wheel scroll (firmware limit).
+pub const WHEEL_RANGE: i32 = 127;
+
 /// Stack-allocated command buffer for parametric commands.
 /// Avoids heap allocation on the move/wheel hot path.
 pub struct CommandBuf {
@@ -20,56 +27,64 @@ impl CommandBuf {
     }
 }
 
-/// Build `km.move(x,y)\r\n`. Returns `None` if the formatted command
-/// exceeds the 64-byte stack buffer (only possible with extreme values).
-pub fn build_move(x: i32, y: i32) -> Option<CommandBuf> {
-    let mut cmd = CommandBuf::new();
-    let _ = write!(&mut cmd.buf[..], "km.move({},{})\r\n", x, y);
-    cmd.len = fmt_len(&cmd.buf);
-    if cmd.len == 0 {
-        return None;
-    }
-    Some(cmd)
+/// Build `km.move(x,y)\r\n`. Returns an error if coordinates exceed ±32767.
+pub fn build_move(x: i32, y: i32) -> Result<CommandBuf> {
+    check_move_range(x, "x")?;
+    check_move_range(y, "y")?;
+    build_cmd(|buf| write!(buf, "km.move({},{})\r\n", x, y))
 }
 
-/// Build `km.silent(x,y)\r\n`.
-pub fn build_silent_move(x: i32, y: i32) -> Option<CommandBuf> {
-    let mut cmd = CommandBuf::new();
-    let _ = write!(&mut cmd.buf[..], "km.silent({},{})\r\n", x, y);
-    cmd.len = fmt_len(&cmd.buf);
-    if cmd.len == 0 {
-        return None;
-    }
-    Some(cmd)
+/// Build `km.silent(x,y)\r\n`. Returns an error if coordinates exceed ±32767.
+pub fn build_silent_move(x: i32, y: i32) -> Result<CommandBuf> {
+    check_move_range(x, "x")?;
+    check_move_range(y, "y")?;
+    build_cmd(|buf| write!(buf, "km.silent({},{})\r\n", x, y))
 }
 
-/// Build `km.wheel(delta)\r\n`.
-pub fn build_wheel(delta: i32) -> Option<CommandBuf> {
+/// Build `km.wheel(delta)\r\n`. Returns an error if delta exceeds ±127.
+pub fn build_wheel(delta: i32) -> Result<CommandBuf> {
+    if !(-WHEEL_RANGE..=WHEEL_RANGE).contains(&delta) {
+        return Err(MakcuError::OutOfRange {
+            value: delta as i64,
+            min: -WHEEL_RANGE as i64,
+            max: WHEEL_RANGE as i64,
+        });
+    }
+    build_cmd(|buf| write!(buf, "km.wheel({})\r\n", delta))
+}
+
+fn check_move_range(v: i32, _axis: &str) -> Result<()> {
+    if !(-MOVE_RANGE..=MOVE_RANGE).contains(&v) {
+        return Err(MakcuError::OutOfRange {
+            value: v as i64,
+            min: -MOVE_RANGE as i64,
+            max: MOVE_RANGE as i64,
+        });
+    }
+    Ok(())
+}
+
+fn build_cmd(f: impl FnOnce(&mut &mut [u8]) -> std::io::Result<()>) -> Result<CommandBuf> {
     let mut cmd = CommandBuf::new();
-    let _ = write!(&mut cmd.buf[..], "km.wheel({})\r\n", delta);
+    let mut buf: &mut [u8] = &mut cmd.buf[..];
+    let _ = f(&mut buf);
     cmd.len = fmt_len(&cmd.buf);
     if cmd.len == 0 {
-        return None;
+        return Err(MakcuError::Protocol("command too long for buffer".into()));
     }
-    Some(cmd)
+    Ok(cmd)
 }
 
 /// Build `km.serial('value')\r\n`
 ///
-/// Returns `None` if the value is too long to fit in the 64-byte command buffer.
+/// Returns an error if the value is too long to fit in the 64-byte command buffer.
 /// The maximum value length is ~45 characters.
-pub fn build_serial_set(value: &str) -> Option<CommandBuf> {
+pub fn build_serial_set(value: &str) -> Result<CommandBuf> {
     // km.serial('')\r\n = 16 bytes overhead, leaving ~48 chars for value
     if value.len() > 45 {
-        return None;
+        return Err(MakcuError::Protocol("serial value too long".into()));
     }
-    let mut cmd = CommandBuf::new();
-    let _ = write!(&mut cmd.buf[..], "km.serial('{}')\r\n", value);
-    cmd.len = fmt_len(&cmd.buf);
-    if cmd.len == 0 {
-        return None;
-    }
-    Some(cmd)
+    build_cmd(|buf| write!(buf, "km.serial('{}')\r\n", value))
 }
 
 /// Find the actual length of the formatted string in the buffer.

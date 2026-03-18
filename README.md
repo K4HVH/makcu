@@ -67,7 +67,7 @@ let device = Device::with_config(DeviceConfig {
 
 ```rust
 device.move_xy(100, -50)?;           // relative move
-device.silent_move(10, 10)?;         // click-move (two HID frames)
+device.silent_move(10, 10)?;         // left-down → move → left-up (two HID frames)
 device.wheel(3)?;                    // scroll up
 
 device.button_down(Button::Left)?;   // press

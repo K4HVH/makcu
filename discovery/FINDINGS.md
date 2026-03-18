@@ -136,7 +136,7 @@ recognise them at all. Use `km.ms1()` / `km.ms2()`.
 
 | Command | Type | Notes |
 |---------|------|-------|
-| `km.wheel(n)` | EXECUTED | Any integer accepted; no clamping up to ±127 |
+| `km.wheel(n)` | EXECUTED | Practical range ±127. Values beyond ±127 accepted but produce erratic behaviour (reduced scroll, missed inputs). |
 
 ### Input locks
 
@@ -251,7 +251,7 @@ Third-party, unmaintained. Does not implement `km.catch_*`.
 3. **`km.click(...)` is physically non-functional** — not just silent, produces no click.
 4. **`moveto` / `getpos` / `km.screen` are silent** and not in current firmware.
 5. **Lock queries return `0` or `1` only** (not 0-3 as v3.9 docs suggest).
-6. **`km.wheel` is NOT clamped** — ±127 physically scrolled further than ±1.
+6. **`km.wheel` practical range is ±127** — the firmware accepts any integer but values beyond ±127 produce erratic behaviour (drastically reduced scroll distance, missed inputs). Not clamped, just broken beyond ±127.
 7. **Device may already be at 4 Mbaud** — always try 4M first before sending baud frame.
 8. **Serial spoofing is mouse-hardware-dependent** — command works but has no effect on mice without a serial number slot.
 9. **Smooth and bezier movement are broken** — confirmed by firmware dev; only `km.move(x,y)` is reliable.

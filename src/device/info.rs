@@ -1,4 +1,4 @@
-use crate::error::{MakcuError, Result};
+use crate::error::Result;
 use crate::protocol::{builder, constants};
 use crate::types::DeviceInfo;
 
@@ -35,8 +35,7 @@ impl Device {
     ///
     /// The value must be at most 45 characters.
     pub fn set_serial(&self, value: &str) -> Result<String> {
-        let cmd = builder::build_serial_set(value)
-            .ok_or_else(|| MakcuError::Protocol("serial value too long".into()))?;
+        let cmd = builder::build_serial_set(value)?;
         self.query_dynamic(cmd.as_bytes()).map(strip_km_prefix)
     }
 
@@ -76,8 +75,7 @@ impl AsyncDevice {
     ///
     /// The value must be at most 45 characters.
     pub async fn set_serial(&self, value: &str) -> Result<String> {
-        let cmd = builder::build_serial_set(value)
-            .ok_or_else(|| MakcuError::Protocol("serial value too long".into()))?;
+        let cmd = builder::build_serial_set(value)?;
         self.query_dynamic(cmd.as_bytes())
             .await
             .map(strip_km_prefix)

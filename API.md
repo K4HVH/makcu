@@ -211,9 +211,12 @@ Useful for drag operations. Response: `EXECUTED`.
 km.wheel(n)\r\n
 ```
 
-Scrolls by `n` units. Accepts any integer; there is no firmware-level clamping.
-Positive values scroll up, negative scroll down (direction depends on OS settings).
-Response: `EXECUTED`.
+Scrolls by `n` units. Positive values scroll up, negative scroll down (direction
+depends on OS settings). Response: `EXECUTED`.
+
+Practical range is **±127**. The firmware does not clamp the value, but values
+outside this range produce erratic behaviour — drastically reduced scroll distance,
+missed inputs, and inconsistent results. Stick to ±127.
 
 ---
 
