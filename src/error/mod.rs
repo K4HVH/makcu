@@ -15,11 +15,7 @@ pub enum MakcuError {
     #[error("protocol error: {0}")]
     Protocol(String),
     #[error("value {value} out of range ({min}..={max})")]
-    OutOfRange {
-        value: i64,
-        min: i64,
-        max: i64,
-    },
+    OutOfRange { value: i64, min: i64, max: i64 },
 }
 
 pub type Result<T> = std::result::Result<T, MakcuError>;
