@@ -17,6 +17,12 @@ impl Device {
         self.exec(constants::CMD_BUTTONS_OFF)
     }
 
+    /// Query whether the button stream is currently enabled on the device.
+    pub fn button_stream_state(&self) -> Result<bool> {
+        let value = self.query(constants::CMD_BUTTONS_QUERY)?;
+        Ok(value.trim() == "1")
+    }
+
     /// Subscribe to button events. Returns a receiver that yields `ButtonMask`
     /// values whenever the device reports a button state change.
     ///
@@ -49,6 +55,12 @@ impl AsyncDevice {
 
     pub async fn disable_button_stream(&self) -> Result<()> {
         self.exec(constants::CMD_BUTTONS_OFF).await
+    }
+
+    /// Query whether the button stream is currently enabled on the device.
+    pub async fn button_stream_state(&self) -> Result<bool> {
+        let value = self.query(constants::CMD_BUTTONS_QUERY).await?;
+        Ok(value.trim() == "1")
     }
 
     pub fn button_events(&self) -> mpsc::Receiver<ButtonMask> {

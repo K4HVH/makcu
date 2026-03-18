@@ -229,6 +229,12 @@ pub struct FireAndForget<'d> {
 }
 
 impl FireAndForget<'_> {
+    /// Send raw command bytes without waiting for a response.
+    /// The `\r\n` terminator must already be included.
+    pub fn send_raw(&self, cmd: &[u8]) -> Result<()> {
+        self.send(cmd)
+    }
+
     pub(crate) fn send(&self, cmd: &[u8]) -> Result<()> {
         self.device
             .transport
@@ -428,6 +434,12 @@ pub struct AsyncFireAndForget<'d> {
 
 #[cfg(feature = "async")]
 impl AsyncFireAndForget<'_> {
+    /// Send raw command bytes without waiting for a response.
+    /// The `\r\n` terminator must already be included.
+    pub fn send_raw(&self, cmd: &[u8]) -> Result<()> {
+        self.send(cmd)
+    }
+
     pub(crate) fn send(&self, cmd: &[u8]) -> Result<()> {
         self.device
             .transport

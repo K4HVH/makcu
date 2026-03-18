@@ -2,7 +2,7 @@
 use std::time::Duration;
 
 use crate::device::Device;
-use crate::error::Result;
+use crate::error::{MakcuError, Result};
 use crate::protocol::{builder as proto_builder, constants};
 use crate::types::{Button, LockTarget};
 
@@ -22,9 +22,12 @@ enum BatchStep {
 /// Fluent command sequence builder.
 ///
 /// Collects commands and executes them in order on `.execute()`.
+/// Range errors from parametric commands (move, wheel) are deferred
+/// until `.execute()` is called.
 pub struct BatchBuilder<'d> {
     device: &'d Device,
     steps: Vec<BatchStep>,
+    error: Option<MakcuError>,
 }
 
 impl<'d> BatchBuilder<'d> {
@@ -32,19 +35,28 @@ impl<'d> BatchBuilder<'d> {
         Self {
             device,
             steps: Vec::new(),
+            error: None,
         }
     }
 
-    pub fn move_xy(mut self, x: i32, y: i32) -> Self {
-        let cmd = proto_builder::build_move(x, y).expect("move command overflow");
-        self.steps.push(BatchStep::Native(cmd.as_bytes().to_vec()));
+    fn push_built(mut self, result: Result<proto_builder::CommandBuf>) -> Self {
+        match result {
+            Ok(cmd) => self.steps.push(BatchStep::Native(cmd.as_bytes().to_vec())),
+            Err(e) => {
+                if self.error.is_none() {
+                    self.error = Some(e);
+                }
+            }
+        }
         self
     }
 
-    pub fn silent_move(mut self, x: i32, y: i32) -> Self {
-        let cmd = proto_builder::build_silent_move(x, y).expect("silent_move command overflow");
-        self.steps.push(BatchStep::Native(cmd.as_bytes().to_vec()));
-        self
+    pub fn move_xy(self, x: i32, y: i32) -> Self {
+        self.push_built(proto_builder::build_move(x, y))
+    }
+
+    pub fn silent_move(self, x: i32, y: i32) -> Self {
+        self.push_built(proto_builder::build_silent_move(x, y))
     }
 
     pub fn button_down(mut self, button: Button) -> Self {
@@ -67,10 +79,8 @@ impl<'d> BatchBuilder<'d> {
         self
     }
 
-    pub fn wheel(mut self, delta: i32) -> Self {
-        let cmd = proto_builder::build_wheel(delta).expect("wheel command overflow");
-        self.steps.push(BatchStep::Native(cmd.as_bytes().to_vec()));
-        self
+    pub fn wheel(self, delta: i32) -> Self {
+        self.push_built(proto_builder::build_wheel(delta))
     }
 
     pub fn set_lock(mut self, target: LockTarget, locked: bool) -> Self {
@@ -83,6 +93,9 @@ impl<'d> BatchBuilder<'d> {
     /// Execute all queued commands.
     /// Consecutive native commands are coalesced into single writes.
     pub fn execute(self) -> Result<()> {
+        if let Some(e) = self.error {
+            return Err(e);
+        }
         let mut native_buf: Vec<u8> = Vec::new();
 
         for step in self.steps {
@@ -220,6 +233,7 @@ enum AsyncBatchStep {
 pub struct AsyncBatchBuilder<'d> {
     device: &'d AsyncDevice,
     steps: Vec<AsyncBatchStep>,
+    error: Option<MakcuError>,
 }
 
 #[cfg(feature = "async")]
@@ -228,21 +242,30 @@ impl<'d> AsyncBatchBuilder<'d> {
         Self {
             device,
             steps: Vec::new(),
+            error: None,
         }
     }
 
-    pub fn move_xy(mut self, x: i32, y: i32) -> Self {
-        let cmd = proto_builder::build_move(x, y).expect("move command overflow");
-        self.steps
-            .push(AsyncBatchStep::Native(cmd.as_bytes().to_vec()));
+    fn push_built(mut self, result: Result<proto_builder::CommandBuf>) -> Self {
+        match result {
+            Ok(cmd) => self
+                .steps
+                .push(AsyncBatchStep::Native(cmd.as_bytes().to_vec())),
+            Err(e) => {
+                if self.error.is_none() {
+                    self.error = Some(e);
+                }
+            }
+        }
         self
     }
 
-    pub fn silent_move(mut self, x: i32, y: i32) -> Self {
-        let cmd = proto_builder::build_silent_move(x, y).expect("silent_move command overflow");
-        self.steps
-            .push(AsyncBatchStep::Native(cmd.as_bytes().to_vec()));
-        self
+    pub fn move_xy(self, x: i32, y: i32) -> Self {
+        self.push_built(proto_builder::build_move(x, y))
+    }
+
+    pub fn silent_move(self, x: i32, y: i32) -> Self {
+        self.push_built(proto_builder::build_silent_move(x, y))
     }
 
     pub fn button_down(mut self, button: Button) -> Self {
@@ -266,11 +289,8 @@ impl<'d> AsyncBatchBuilder<'d> {
         self
     }
 
-    pub fn wheel(mut self, delta: i32) -> Self {
-        let cmd = proto_builder::build_wheel(delta).expect("wheel command overflow");
-        self.steps
-            .push(AsyncBatchStep::Native(cmd.as_bytes().to_vec()));
-        self
+    pub fn wheel(self, delta: i32) -> Self {
+        self.push_built(proto_builder::build_wheel(delta))
     }
 
     pub fn set_lock(mut self, target: LockTarget, locked: bool) -> Self {
@@ -282,6 +302,9 @@ impl<'d> AsyncBatchBuilder<'d> {
 
     /// Execute all queued commands (async).
     pub async fn execute(self) -> Result<()> {
+        if let Some(e) = self.error {
+            return Err(e);
+        }
         let mut native_buf: Vec<u8> = Vec::new();
 
         for step in self.steps {
