@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use crate::error::Result;
+use crate::timed;
 use crate::types::Button;
 
 use crate::device::Device;
@@ -8,9 +9,11 @@ use crate::device::Device;
 impl Device {
     /// Press + hold + release. `hold` is the delay between down and up.
     pub fn click(&self, button: Button, hold: Duration) -> Result<()> {
-        self.button_down(button)?;
-        std::thread::sleep(hold);
-        self.button_up(button)
+        timed!("click", {
+            self.button_down(button)?;
+            std::thread::sleep(hold);
+            self.button_up(button)
+        })
     }
 
     /// Repeated clicks with a delay between each press+release cycle.
@@ -21,13 +24,15 @@ impl Device {
         count: u32,
         interval: Duration,
     ) -> Result<()> {
-        for i in 0..count {
-            self.click(button, hold)?;
-            if i + 1 < count {
-                std::thread::sleep(interval);
+        timed!("click_sequence", {
+            for i in 0..count {
+                self.click(button, hold)?;
+                if i + 1 < count {
+                    std::thread::sleep(interval);
+                }
             }
-        }
-        Ok(())
+            Ok(())
+        })
     }
 }
 
@@ -38,9 +43,11 @@ use crate::device::AsyncDevice;
 impl AsyncDevice {
     /// Press + hold + release (async — uses `tokio::time::sleep`).
     pub async fn click(&self, button: Button, hold: Duration) -> Result<()> {
-        self.button_down(button).await?;
-        tokio::time::sleep(hold).await;
-        self.button_up(button).await
+        timed!("click", {
+            self.button_down(button).await?;
+            tokio::time::sleep(hold).await;
+            self.button_up(button).await
+        })
     }
 
     /// Repeated clicks with a delay between each press+release cycle (async).
@@ -51,12 +58,14 @@ impl AsyncDevice {
         count: u32,
         interval: Duration,
     ) -> Result<()> {
-        for i in 0..count {
-            self.click(button, hold).await?;
-            if i + 1 < count {
-                tokio::time::sleep(interval).await;
+        timed!("click_sequence", {
+            for i in 0..count {
+                self.click(button, hold).await?;
+                if i + 1 < count {
+                    tokio::time::sleep(interval).await;
+                }
             }
-        }
-        Ok(())
+            Ok(())
+        })
     }
 }

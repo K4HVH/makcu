@@ -1,4 +1,4 @@
-use std::sync::mpsc;
+use crossbeam_channel as channel;
 
 use crate::error::Result;
 use crate::protocol::constants;
@@ -29,7 +29,7 @@ impl Device {
     /// pressed or released.
     ///
     /// You must call `set_lock()` then `enable_catch()` first for events to flow.
-    pub fn catch_events(&self) -> mpsc::Receiver<CatchEvent> {
+    pub fn catch_events(&self) -> channel::Receiver<CatchEvent> {
         self.transport().subscribe_catch()
     }
 }
@@ -54,7 +54,7 @@ impl AsyncDevice {
     }
 
     /// Subscribe to catch events.
-    pub fn catch_events(&self) -> mpsc::Receiver<CatchEvent> {
+    pub fn catch_events(&self) -> channel::Receiver<CatchEvent> {
         self.transport().subscribe_catch()
     }
 }

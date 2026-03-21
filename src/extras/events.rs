@@ -38,6 +38,7 @@ pub(crate) const POLL_INTERVAL: Duration = Duration::from_millis(50);
 impl Device {
     /// Register a callback fired whenever the given button changes state.
     ///
+    /// Automatically enables the button stream if not already enabled.
     /// Spawns an internal listener thread that diffs the `ButtonMask` stream.
     /// Returns a handle that unregisters the callback when dropped.
     ///
@@ -46,6 +47,8 @@ impl Device {
     where
         F: Fn(bool) + Send + 'static,
     {
+        self.enable_button_stream()?;
+
         let alive = Arc::new(AtomicBool::new(true));
         let alive_clone = Arc::clone(&alive);
         let rx = self.button_events();
@@ -63,8 +66,8 @@ impl Device {
                                 f(current);
                             }
                         }
-                        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => continue,
-                        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+                        Err(crossbeam_channel::RecvTimeoutError::Timeout) => continue,
+                        Err(crossbeam_channel::RecvTimeoutError::Disconnected) => break,
                     }
                 }
             })?;
@@ -73,10 +76,14 @@ impl Device {
     }
 
     /// Register a callback that fires on any button state change with the full mask.
+    ///
+    /// Automatically enables the button stream if not already enabled.
     pub fn on_button_event<F>(&self, f: F) -> Result<EventHandle>
     where
         F: Fn(ButtonMask) + Send + 'static,
     {
+        self.enable_button_stream()?;
+
         let alive = Arc::new(AtomicBool::new(true));
         let alive_clone = Arc::clone(&alive);
         let rx = self.button_events();
@@ -87,8 +94,8 @@ impl Device {
                 while alive_clone.load(Ordering::Acquire) {
                     match rx.recv_timeout(POLL_INTERVAL) {
                         Ok(mask) => f(mask),
-                        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => continue,
-                        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+                        Err(crossbeam_channel::RecvTimeoutError::Timeout) => continue,
+                        Err(crossbeam_channel::RecvTimeoutError::Disconnected) => break,
                     }
                 }
             })?;
@@ -104,11 +111,15 @@ use crate::device::AsyncDevice;
 
 #[cfg(feature = "async")]
 impl AsyncDevice {
-    /// Register a callback for button press/release (async — uses std thread for mpsc).
-    pub fn on_button_press<F>(&self, button: Button, f: F) -> Result<EventHandle>
+    /// Register a callback for button press/release (async).
+    ///
+    /// Automatically enables the button stream if not already enabled.
+    pub async fn on_button_press<F>(&self, button: Button, f: F) -> Result<EventHandle>
     where
         F: Fn(bool) + Send + 'static,
     {
+        self.enable_button_stream().await?;
+
         let alive = Arc::new(AtomicBool::new(true));
         let alive_clone = Arc::clone(&alive);
         let rx = self.button_events();
@@ -126,8 +137,8 @@ impl AsyncDevice {
                                 f(current);
                             }
                         }
-                        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => continue,
-                        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+                        Err(crossbeam_channel::RecvTimeoutError::Timeout) => continue,
+                        Err(crossbeam_channel::RecvTimeoutError::Disconnected) => break,
                     }
                 }
             })?;
@@ -136,10 +147,14 @@ impl AsyncDevice {
     }
 
     /// Register a callback for any button state change (async).
-    pub fn on_button_event<F>(&self, f: F) -> Result<EventHandle>
+    ///
+    /// Automatically enables the button stream if not already enabled.
+    pub async fn on_button_event<F>(&self, f: F) -> Result<EventHandle>
     where
         F: Fn(ButtonMask) + Send + 'static,
     {
+        self.enable_button_stream().await?;
+
         let alive = Arc::new(AtomicBool::new(true));
         let alive_clone = Arc::clone(&alive);
         let rx = self.button_events();
@@ -150,8 +165,8 @@ impl AsyncDevice {
                 while alive_clone.load(Ordering::Acquire) {
                     match rx.recv_timeout(POLL_INTERVAL) {
                         Ok(mask) => f(mask),
-                        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => continue,
-                        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+                        Err(crossbeam_channel::RecvTimeoutError::Timeout) => continue,
+                        Err(crossbeam_channel::RecvTimeoutError::Disconnected) => break,
                     }
                 }
             })?;

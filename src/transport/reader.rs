@@ -1,8 +1,9 @@
 use std::collections::VecDeque;
 use std::io::Read;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Condvar, Mutex, mpsc::SyncSender};
+use std::sync::{Arc, Condvar, Mutex};
 
+use crossbeam_channel as channel;
 use serialport::SerialPort;
 
 use crate::protocol::parser::{self, ParseEvent, StreamParser};
@@ -25,9 +26,9 @@ impl ReaderSignal {
 
 pub(crate) fn reader_thread(
     mut port: Box<dyn SerialPort>,
-    pending_responses: Arc<Mutex<VecDeque<SyncSender<Vec<u8>>>>>,
-    button_subs: Arc<Mutex<Vec<std::sync::mpsc::Sender<ButtonMask>>>>,
-    catch_subs: Arc<Mutex<Vec<std::sync::mpsc::Sender<CatchEvent>>>>,
+    pending_responses: Arc<Mutex<VecDeque<channel::Sender<Vec<u8>>>>>,
+    button_subs: Arc<Mutex<Vec<channel::Sender<ButtonMask>>>>,
+    catch_subs: Arc<Mutex<Vec<channel::Sender<CatchEvent>>>>,
     signal: Arc<ReaderSignal>,
 ) {
     let mut parser = StreamParser::new();

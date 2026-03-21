@@ -1,22 +1,22 @@
 use std::collections::VecDeque;
 use std::io::Write;
-use std::sync::{Arc, Mutex, mpsc::SyncSender};
+use std::sync::{Arc, Mutex};
 
-use crossbeam_channel::Receiver;
+use crossbeam_channel as channel;
 use serialport::SerialPort;
 
 pub(crate) struct WritePayload {
     pub data: Vec<u8>,
-    pub response_tx: Option<SyncSender<Vec<u8>>>,
+    pub response_tx: Option<channel::Sender<Vec<u8>>>,
 }
 
 pub(crate) fn writer_thread(
     mut port: Box<dyn SerialPort>,
-    rx: Receiver<WritePayload>,
-    pending_responses: Arc<Mutex<VecDeque<SyncSender<Vec<u8>>>>>,
+    rx: channel::Receiver<WritePayload>,
+    pending_responses: Arc<Mutex<VecDeque<channel::Sender<Vec<u8>>>>>,
 ) {
     let mut coalesced = Vec::with_capacity(512);
-    let mut response_txs: Vec<SyncSender<Vec<u8>>> = Vec::new();
+    let mut response_txs: Vec<channel::Sender<Vec<u8>>> = Vec::new();
 
     loop {
         // Block on first payload.

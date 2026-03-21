@@ -7,7 +7,7 @@ pub(crate) mod writer;
 
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
-use std::sync::{Arc, Mutex, mpsc};
+use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::Duration;
 
@@ -43,16 +43,16 @@ pub(crate) struct TransportInner {
     write_rx: channel::Receiver<WritePayload>,
 
     // Pending response oneshots: writer pushes, reader pops. Shared Arc.
-    pending_responses: Arc<Mutex<VecDeque<mpsc::SyncSender<Vec<u8>>>>>,
+    pending_responses: Arc<Mutex<VecDeque<channel::Sender<Vec<u8>>>>>,
 
     // Button event subscribers.
-    button_subs: Arc<Mutex<Vec<mpsc::Sender<ButtonMask>>>>,
+    button_subs: Arc<Mutex<Vec<channel::Sender<ButtonMask>>>>,
 
     // Catch event subscribers.
-    catch_subs: Arc<Mutex<Vec<mpsc::Sender<CatchEvent>>>>,
+    catch_subs: Arc<Mutex<Vec<channel::Sender<CatchEvent>>>>,
 
     // Connection state subscribers.
-    pub state_subs: Mutex<Vec<mpsc::Sender<ConnectionState>>>,
+    pub state_subs: Mutex<Vec<channel::Sender<ConnectionState>>>,
 
     // Reader signal for disconnect notification (replaced on reconnect).
     pub reader_signal: Mutex<Option<Arc<ReaderSignal>>>,
@@ -244,15 +244,15 @@ impl TransportHandle {
             })?;
             Ok(None)
         } else {
-            let (tx, rx) = mpsc::sync_channel(1);
+            let (tx, rx) = channel::bounded(1);
             self.inner.send_payload(WritePayload {
                 data,
                 response_tx: Some(tx),
             })?;
             match rx.recv_timeout(timeout) {
                 Ok(response) => Ok(Some(response)),
-                Err(mpsc::RecvTimeoutError::Timeout) => Err(MakcuError::Timeout),
-                Err(mpsc::RecvTimeoutError::Disconnected) => Err(MakcuError::Disconnected),
+                Err(channel::RecvTimeoutError::Timeout) => Err(MakcuError::Timeout),
+                Err(channel::RecvTimeoutError::Disconnected) => Err(MakcuError::Disconnected),
             }
         }
     }
@@ -276,7 +276,7 @@ impl TransportHandle {
             })?;
             Ok(None)
         } else {
-            let (tx, rx) = mpsc::sync_channel(1);
+            let (tx, rx) = channel::bounded(1);
             self.inner.send_payload(WritePayload {
                 data,
                 response_tx: Some(tx),
@@ -284,8 +284,8 @@ impl TransportHandle {
 
             tokio::task::spawn_blocking(move || match rx.recv_timeout(timeout) {
                 Ok(response) => Ok(Some(response)),
-                Err(mpsc::RecvTimeoutError::Timeout) => Err(MakcuError::Timeout),
-                Err(mpsc::RecvTimeoutError::Disconnected) => Err(MakcuError::Disconnected),
+                Err(channel::RecvTimeoutError::Timeout) => Err(MakcuError::Timeout),
+                Err(channel::RecvTimeoutError::Disconnected) => Err(MakcuError::Disconnected),
             })
             .await
             .map_err(|e| MakcuError::Protocol(format!("tokio join error: {}", e)))?
@@ -328,22 +328,22 @@ impl TransportHandle {
     }
 
     /// Subscribe to connection state changes.
-    pub fn subscribe_state(&self) -> mpsc::Receiver<ConnectionState> {
-        let (tx, rx) = mpsc::channel();
+    pub fn subscribe_state(&self) -> channel::Receiver<ConnectionState> {
+        let (tx, rx) = channel::unbounded();
         self.inner.state_subs.lock().unwrap().push(tx);
         rx
     }
 
     /// Subscribe to button events from the device stream.
-    pub fn subscribe_buttons(&self) -> mpsc::Receiver<ButtonMask> {
-        let (tx, rx) = mpsc::channel();
+    pub fn subscribe_buttons(&self) -> channel::Receiver<ButtonMask> {
+        let (tx, rx) = channel::unbounded();
         self.inner.button_subs.lock().unwrap().push(tx);
         rx
     }
 
     /// Subscribe to catch events (per-button press/release stream).
-    pub fn subscribe_catch(&self) -> mpsc::Receiver<CatchEvent> {
-        let (tx, rx) = mpsc::channel();
+    pub fn subscribe_catch(&self) -> channel::Receiver<CatchEvent> {
+        let (tx, rx) = channel::unbounded();
         self.inner.catch_subs.lock().unwrap().push(tx);
         rx
     }

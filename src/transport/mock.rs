@@ -1,5 +1,7 @@
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex, mpsc};
+use std::sync::{Arc, Mutex};
+
+use crossbeam_channel as channel;
 
 use crate::types::{ButtonMask, CatchEvent};
 
@@ -85,10 +87,10 @@ impl MockTransport {
 /// Worker thread that processes commands through the MockTransport.
 #[cfg(feature = "mock")]
 pub(crate) fn mock_worker(
-    rx: crossbeam_channel::Receiver<WritePayload>,
+    rx: channel::Receiver<WritePayload>,
     mock: Arc<MockTransport>,
-    button_subs: Arc<Mutex<Vec<mpsc::Sender<ButtonMask>>>>,
-    catch_subs: Arc<Mutex<Vec<mpsc::Sender<CatchEvent>>>>,
+    button_subs: Arc<Mutex<Vec<channel::Sender<ButtonMask>>>>,
+    catch_subs: Arc<Mutex<Vec<channel::Sender<CatchEvent>>>>,
 ) {
     loop {
         match rx.recv() {

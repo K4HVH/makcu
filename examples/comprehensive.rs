@@ -336,19 +336,22 @@ async fn main() -> Result<()> {
     // =========================================================================
     println!("\n--- 12. Extras: Event Callbacks ---");
 
-    device.enable_button_stream().await?;
-
-    let h1: EventHandle = device.on_button_press(Button::Left, |pressed| {
-        println!(
-            "    [callback] Left: {}",
-            if pressed { "down" } else { "up" }
-        );
-    })?;
+    // on_button_press / on_button_event auto-enable the button stream.
+    let h1: EventHandle = device
+        .on_button_press(Button::Left, |pressed| {
+            println!(
+                "    [callback] Left: {}",
+                if pressed { "down" } else { "up" }
+            );
+        })
+        .await?;
     println!("  on_button_press(Left) registered");
 
-    let h2: EventHandle = device.on_button_event(|mask| {
-        println!("    [callback] mask: {:#04x}", mask.raw());
-    })?;
+    let h2: EventHandle = device
+        .on_button_event(|mask| {
+            println!("    [callback] mask: {:#04x}", mask.raw());
+        })
+        .await?;
     println!("  on_button_event() registered");
     println!("  Press mouse buttons to see callbacks fire...");
     tokio::time::sleep(Duration::from_secs(3)).await;

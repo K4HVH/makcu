@@ -31,6 +31,11 @@ pub mod profiler;
 
 // -- Public re-exports --
 
+/// Re-export of `crossbeam_channel` so users can type the receivers
+/// returned by `button_events()`, `catch_events()`, and `connection_events()`
+/// without adding `crossbeam-channel` as a direct dependency.
+pub use crossbeam_channel;
+
 pub use device::{Device, DeviceConfig, FireAndForget};
 pub use error::{MakcuError, Result};
 pub use types::{
