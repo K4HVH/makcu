@@ -2,7 +2,7 @@ use crate::error::Result;
 use crate::protocol::builder;
 use crate::timed;
 
-use super::{Device, FireAndForget};
+use super::Device;
 
 impl Device {
     /// Relative mouse move. Coordinates are in HID units, range ±32767.
@@ -28,24 +28,10 @@ impl Device {
     }
 }
 
-impl FireAndForget<'_> {
-    pub fn move_xy(&self, x: i32, y: i32) -> Result<()> {
-        self.send_dynamic(builder::build_move(x, y)?.as_bytes())
-    }
-
-    pub fn silent_move(&self, x: i32, y: i32) -> Result<()> {
-        self.send_dynamic(builder::build_silent_move(x, y)?.as_bytes())
-    }
-
-    pub fn wheel(&self, delta: i32) -> Result<()> {
-        self.send_dynamic(builder::build_wheel(delta)?.as_bytes())
-    }
-}
-
 // -- Async --
 
 #[cfg(feature = "async")]
-use super::{AsyncDevice, AsyncFireAndForget};
+use super::AsyncDevice;
 
 #[cfg(feature = "async")]
 impl AsyncDevice {
@@ -64,20 +50,5 @@ impl AsyncDevice {
     pub async fn wheel(&self, delta: i32) -> Result<()> {
         self.exec_dynamic(builder::build_wheel(delta)?.as_bytes())
             .await
-    }
-}
-
-#[cfg(feature = "async")]
-impl AsyncFireAndForget<'_> {
-    pub fn move_xy(&self, x: i32, y: i32) -> Result<()> {
-        self.send_dynamic(builder::build_move(x, y)?.as_bytes())
-    }
-
-    pub fn silent_move(&self, x: i32, y: i32) -> Result<()> {
-        self.send_dynamic(builder::build_silent_move(x, y)?.as_bytes())
-    }
-
-    pub fn wheel(&self, delta: i32) -> Result<()> {
-        self.send_dynamic(builder::build_wheel(delta)?.as_bytes())
     }
 }
