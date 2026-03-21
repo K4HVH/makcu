@@ -67,11 +67,8 @@ fn check_move_range(v: i32, _axis: &str) -> Result<()> {
 fn build_cmd(f: impl FnOnce(&mut &mut [u8]) -> std::io::Result<()>) -> Result<CommandBuf> {
     let mut cmd = CommandBuf::new();
     let mut buf: &mut [u8] = &mut cmd.buf[..];
-    let _ = f(&mut buf);
+    f(&mut buf).map_err(|_| MakcuError::Protocol("command too long for buffer".into()))?;
     cmd.len = fmt_len(&cmd.buf);
-    if cmd.len == 0 {
-        return Err(MakcuError::Protocol("command too long for buffer".into()));
-    }
     Ok(cmd)
 }
 

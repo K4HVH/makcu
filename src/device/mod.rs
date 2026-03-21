@@ -157,6 +157,11 @@ impl Device {
         self.transport.port_name()
     }
 
+    /// Get the configuration this device was created with.
+    pub fn config(&self) -> &DeviceConfig {
+        &self.config
+    }
+
     /// Subscribe to connection state changes.
     pub fn connection_events(&self) -> channel::Receiver<ConnectionState> {
         self.transport.subscribe_state()
@@ -365,6 +370,11 @@ impl AsyncDevice {
     /// Get the port name this device is connected to.
     pub fn port_name(&self) -> String {
         self.transport.port_name()
+    }
+
+    /// Get the configuration this device was created with.
+    pub fn config(&self) -> &DeviceConfig {
+        &self.config
     }
 
     /// Subscribe to connection state changes.

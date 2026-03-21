@@ -1,7 +1,5 @@
 #[derive(Debug, thiserror::Error)]
 pub enum MakcuError {
-    #[error("not connected")]
-    NotConnected,
     #[error("port error: {0}")]
     Port(#[from] serialport::Error),
     #[error("I/O error: {0}")]
