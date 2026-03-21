@@ -3,6 +3,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::error::Result;
 use crate::protocol::constants;
+use crate::timed;
 use crate::types::{Button, CatchEvent};
 
 use crate::device::Device;
@@ -15,9 +16,11 @@ impl Device {
     ///
     /// Equivalent to `set_lock(target, true)` then `enable_catch(button)`.
     pub fn start_catch(&self, button: Button) -> Result<()> {
-        let target = constants::button_to_lock_target(button);
-        self.set_lock(target, true)?;
-        self.enable_catch(button)
+        timed!("start_catch", {
+            let target = constants::button_to_lock_target(button);
+            self.set_lock(target, true)?;
+            self.enable_catch(button)
+        })
     }
 
     /// Unlock the button, stopping the catch stream.
@@ -26,8 +29,10 @@ impl Device {
     /// catch disable command in the firmware. This also releases the
     /// button lock.
     pub fn stop_catch(&self, button: Button) -> Result<()> {
-        let target = constants::button_to_lock_target(button);
-        self.set_lock(target, false)
+        timed!("stop_catch", {
+            let target = constants::button_to_lock_target(button);
+            self.set_lock(target, false)
+        })
     }
 
     /// Register a callback fired on catch press/release events for a button.
@@ -55,8 +60,8 @@ impl Device {
                                 f(event.pressed);
                             }
                         }
-                        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => continue,
-                        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+                        Err(crossbeam_channel::RecvTimeoutError::Timeout) => continue,
+                        Err(crossbeam_channel::RecvTimeoutError::Disconnected) => break,
                     }
                 }
             })?;
@@ -82,8 +87,8 @@ impl Device {
                 while alive_clone.load(Ordering::Acquire) {
                     match rx.recv_timeout(POLL_INTERVAL) {
                         Ok(event) => f(event),
-                        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => continue,
-                        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+                        Err(crossbeam_channel::RecvTimeoutError::Timeout) => continue,
+                        Err(crossbeam_channel::RecvTimeoutError::Disconnected) => break,
                     }
                 }
             })?;
@@ -101,20 +106,24 @@ use crate::device::AsyncDevice;
 impl AsyncDevice {
     /// Lock the button and enable catch in one call.
     pub async fn start_catch(&self, button: Button) -> Result<()> {
-        let target = constants::button_to_lock_target(button);
-        self.set_lock(target, true).await?;
-        self.enable_catch(button).await
+        timed!("start_catch", {
+            let target = constants::button_to_lock_target(button);
+            self.set_lock(target, true).await?;
+            self.enable_catch(button).await
+        })
     }
 
     /// Unlock the button, stopping the catch stream.
     /// This also releases the button lock.
     pub async fn stop_catch(&self, button: Button) -> Result<()> {
-        let target = constants::button_to_lock_target(button);
-        self.set_lock(target, false).await
+        timed!("stop_catch", {
+            let target = constants::button_to_lock_target(button);
+            self.set_lock(target, false).await
+        })
     }
 
     /// Register a callback for catch press/release events on a button (async).
-    pub fn on_catch<F>(&self, button: Button, f: F) -> Result<EventHandle>
+    pub async fn on_catch<F>(&self, button: Button, f: F) -> Result<EventHandle>
     where
         F: Fn(bool) + Send + 'static,
     {
@@ -132,8 +141,8 @@ impl AsyncDevice {
                                 f(event.pressed);
                             }
                         }
-                        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => continue,
-                        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+                        Err(crossbeam_channel::RecvTimeoutError::Timeout) => continue,
+                        Err(crossbeam_channel::RecvTimeoutError::Disconnected) => break,
                     }
                 }
             })?;
@@ -142,7 +151,7 @@ impl AsyncDevice {
     }
 
     /// Register a callback for all catch events (async).
-    pub fn on_catch_event<F>(&self, f: F) -> Result<EventHandle>
+    pub async fn on_catch_event<F>(&self, f: F) -> Result<EventHandle>
     where
         F: Fn(CatchEvent) + Send + 'static,
     {
@@ -156,8 +165,8 @@ impl AsyncDevice {
                 while alive_clone.load(Ordering::Acquire) {
                     match rx.recv_timeout(POLL_INTERVAL) {
                         Ok(event) => f(event),
-                        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => continue,
-                        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
+                        Err(crossbeam_channel::RecvTimeoutError::Timeout) => continue,
+                        Err(crossbeam_channel::RecvTimeoutError::Disconnected) => break,
                     }
                 }
             })?;

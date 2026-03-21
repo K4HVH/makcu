@@ -109,6 +109,12 @@ impl<'d> BatchBuilder<'d> {
         self
     }
 
+    /// Queue raw command bytes. The `\r\n` terminator must already be included.
+    pub fn send_raw(mut self, cmd: &[u8]) -> Self {
+        self.steps.push(BatchStep::Native(cmd.to_vec()));
+        self
+    }
+
     /// Execute all queued commands.
     /// Consecutive native commands are coalesced into single writes.
     pub fn execute(self) -> Result<()> {
@@ -354,6 +360,12 @@ impl<'d> AsyncBatchBuilder<'d> {
     pub fn disable_button_stream(mut self) -> Self {
         self.steps
             .push(AsyncBatchStep::Native(constants::CMD_BUTTONS_OFF.to_vec()));
+        self
+    }
+
+    /// Queue raw command bytes. The `\r\n` terminator must already be included.
+    pub fn send_raw(mut self, cmd: &[u8]) -> Self {
+        self.steps.push(AsyncBatchStep::Native(cmd.to_vec()));
         self
     }
 

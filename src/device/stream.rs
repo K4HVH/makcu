@@ -1,4 +1,4 @@
-use std::sync::mpsc;
+use crossbeam_channel as channel;
 
 use crate::error::Result;
 use crate::protocol::constants;
@@ -33,7 +33,7 @@ impl Device {
     /// values whenever the device reports a button state change.
     ///
     /// You must call `enable_button_stream()` first for events to flow.
-    pub fn button_events(&self) -> mpsc::Receiver<ButtonMask> {
+    pub fn button_events(&self) -> channel::Receiver<ButtonMask> {
         self.transport().subscribe_buttons()
     }
 }
@@ -67,7 +67,7 @@ impl AsyncDevice {
         })
     }
 
-    pub fn button_events(&self) -> mpsc::Receiver<ButtonMask> {
+    pub fn button_events(&self) -> channel::Receiver<ButtonMask> {
         self.transport().subscribe_buttons()
     }
 }

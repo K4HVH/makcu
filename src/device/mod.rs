@@ -7,8 +7,9 @@ mod stream;
 
 use std::cell::Cell;
 use std::ops::Deref;
-use std::sync::mpsc;
 use std::time::Duration;
+
+use crossbeam_channel as channel;
 
 use crate::error::{MakcuError, Result};
 use crate::protocol::parser::{self, ResponseKind};
@@ -157,7 +158,7 @@ impl Device {
     }
 
     /// Subscribe to connection state changes.
-    pub fn connection_events(&self) -> mpsc::Receiver<ConnectionState> {
+    pub fn connection_events(&self) -> channel::Receiver<ConnectionState> {
         self.transport.subscribe_state()
     }
 
@@ -367,7 +368,7 @@ impl AsyncDevice {
     }
 
     /// Subscribe to connection state changes.
-    pub fn connection_events(&self) -> mpsc::Receiver<ConnectionState> {
+    pub fn connection_events(&self) -> channel::Receiver<ConnectionState> {
         self.transport.subscribe_state()
     }
 

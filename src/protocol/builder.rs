@@ -79,10 +79,17 @@ fn build_cmd(f: impl FnOnce(&mut &mut [u8]) -> std::io::Result<()>) -> Result<Co
 ///
 /// Returns an error if the value is too long to fit in the 64-byte command buffer.
 /// The maximum value length is ~45 characters.
+/// Maximum length for a serial number value (firmware limit).
+pub const SERIAL_MAX_LEN: usize = 45;
+
 pub fn build_serial_set(value: &str) -> Result<CommandBuf> {
     // km.serial('')\r\n = 16 bytes overhead, leaving ~48 chars for value
-    if value.len() > 45 {
-        return Err(MakcuError::Protocol("serial value too long".into()));
+    if value.len() > SERIAL_MAX_LEN {
+        return Err(MakcuError::OutOfRange {
+            value: value.len() as i64,
+            min: 0,
+            max: SERIAL_MAX_LEN as i64,
+        });
     }
     build_cmd(|buf| write!(buf, "km.serial('{}')\r\n", value))
 }
