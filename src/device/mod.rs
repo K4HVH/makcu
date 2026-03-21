@@ -293,6 +293,16 @@ pub struct AsyncDevice {
     config: DeviceConfig,
 }
 
+// Compile-time assertions that AsyncDevice is Send + Sync.
+#[cfg(feature = "async")]
+#[allow(dead_code)]
+const _: () = {
+    fn assert_send_sync<T: Send + Sync>() {}
+    fn _assertions() {
+        assert_send_sync::<AsyncDevice>();
+    }
+};
+
 #[cfg(feature = "async")]
 impl std::fmt::Debug for AsyncDevice {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

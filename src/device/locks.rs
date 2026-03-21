@@ -16,8 +16,10 @@ impl Device {
 
     /// Query whether a lock is currently active.
     pub fn lock_state(&self, target: LockTarget) -> Result<bool> {
-        let value = self.query(constants::lock_query_cmd(target))?;
-        Ok(value.trim() == "1")
+        timed!("lock_state", {
+            let value = self.query(constants::lock_query_cmd(target))?;
+            Ok(value.trim() == "1")
+        })
     }
 
     /// Query all seven lock states in one call.
@@ -42,12 +44,17 @@ use super::AsyncDevice;
 #[cfg(feature = "async")]
 impl AsyncDevice {
     pub async fn set_lock(&self, target: LockTarget, locked: bool) -> Result<()> {
-        self.exec(constants::lock_set_cmd(target, locked)).await
+        timed!(
+            "set_lock",
+            self.exec(constants::lock_set_cmd(target, locked)).await
+        )
     }
 
     pub async fn lock_state(&self, target: LockTarget) -> Result<bool> {
-        let value = self.query(constants::lock_query_cmd(target)).await?;
-        Ok(value.trim() == "1")
+        timed!("lock_state", {
+            let value = self.query(constants::lock_query_cmd(target)).await?;
+            Ok(value.trim() == "1")
+        })
     }
 
     pub async fn lock_states_all(&self) -> Result<LockStates> {
