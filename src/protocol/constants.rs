@@ -51,6 +51,13 @@ pub const CMD_SIDE2_UP: &[u8] = b"km.ms2(0)\r\n";
 pub const CMD_SIDE2_FORCE_UP: &[u8] = b"km.ms2(2)\r\n";
 pub const CMD_SIDE2_QUERY: &[u8] = b"km.ms2()\r\n";
 
+// -- Catch commands --
+pub const CMD_CATCH_LEFT_ON: &[u8] = b"km.catch_ml(0)\r\n";
+pub const CMD_CATCH_RIGHT_ON: &[u8] = b"km.catch_mr(0)\r\n";
+pub const CMD_CATCH_MIDDLE_ON: &[u8] = b"km.catch_mm(0)\r\n";
+pub const CMD_CATCH_SIDE1_ON: &[u8] = b"km.catch_ms1(0)\r\n";
+pub const CMD_CATCH_SIDE2_ON: &[u8] = b"km.catch_ms2(0)\r\n";
+
 // -- Lock commands --
 pub const CMD_LOCK_X_ON: &[u8] = b"km.lock_mx(1)\r\n";
 pub const CMD_LOCK_X_OFF: &[u8] = b"km.lock_mx(0)\r\n";
@@ -119,6 +126,27 @@ pub fn button_query_cmd(button: Button) -> &'static [u8] {
         Button::Middle => CMD_MIDDLE_QUERY,
         Button::Side1 => CMD_SIDE1_QUERY,
         Button::Side2 => CMD_SIDE2_QUERY,
+    }
+}
+
+pub fn catch_enable_cmd(button: Button) -> &'static [u8] {
+    match button {
+        Button::Left => CMD_CATCH_LEFT_ON,
+        Button::Right => CMD_CATCH_RIGHT_ON,
+        Button::Middle => CMD_CATCH_MIDDLE_ON,
+        Button::Side1 => CMD_CATCH_SIDE1_ON,
+        Button::Side2 => CMD_CATCH_SIDE2_ON,
+    }
+}
+
+/// Map a Button to the corresponding LockTarget for catch operations.
+pub fn button_to_lock_target(button: Button) -> LockTarget {
+    match button {
+        Button::Left => LockTarget::Left,
+        Button::Right => LockTarget::Right,
+        Button::Middle => LockTarget::Middle,
+        Button::Side1 => LockTarget::Side1,
+        Button::Side2 => LockTarget::Side2,
     }
 }
 

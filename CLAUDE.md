@@ -64,5 +64,6 @@ All Device methods take `&self` (not `&mut self`). I/O goes through channels. De
 - Sync and async impls live in the same files, async gated by `#[cfg(feature = "async")]`
 - Fire-and-forget mode accessed via `device.ff()` wrapper, not a flag on each method
 - The `timed!` macro wraps Device methods when the `profile` feature is enabled
-- Broken firmware commands (km.click, km.smooth, km.bezier, km.catch) are intentionally not exposed; `extras` provides correct software implementations
+- Broken firmware commands (km.click, km.smooth, km.bezier) are intentionally not exposed; `extras` provides correct software implementations
+- `km.catch_m*()` works but requires button locking first — see `discovery/CATCH.md` for full protocol details
 - Query commands always hit the device — no cached state that can go stale

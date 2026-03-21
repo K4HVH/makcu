@@ -19,6 +19,12 @@ impl std::fmt::Debug for EventHandle {
     }
 }
 
+impl EventHandle {
+    pub(crate) fn new(alive: Arc<AtomicBool>) -> Self {
+        Self { alive }
+    }
+}
+
 impl Drop for EventHandle {
     fn drop(&mut self) {
         self.alive.store(false, Ordering::Release);
@@ -26,7 +32,7 @@ impl Drop for EventHandle {
 }
 
 /// Polling interval for event listener threads to check the `alive` flag.
-const POLL_INTERVAL: Duration = Duration::from_millis(50);
+pub(crate) const POLL_INTERVAL: Duration = Duration::from_millis(50);
 
 impl Device {
     /// Register a callback fired whenever the given button changes state.

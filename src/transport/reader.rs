@@ -5,8 +5,8 @@ use std::sync::{Arc, Condvar, Mutex, mpsc::SyncSender};
 
 use serialport::SerialPort;
 
-use crate::protocol::parser::{ParseEvent, StreamParser};
-use crate::types::ButtonMask;
+use crate::protocol::parser::{self, ParseEvent, StreamParser};
+use crate::types::{ButtonMask, CatchEvent};
 
 /// Shared state that the reader thread signals on exit.
 pub(crate) struct ReaderSignal {
@@ -27,6 +27,7 @@ pub(crate) fn reader_thread(
     mut port: Box<dyn SerialPort>,
     pending_responses: Arc<Mutex<VecDeque<SyncSender<Vec<u8>>>>>,
     button_subs: Arc<Mutex<Vec<std::sync::mpsc::Sender<ButtonMask>>>>,
+    catch_subs: Arc<Mutex<Vec<std::sync::mpsc::Sender<CatchEvent>>>>,
     signal: Arc<ReaderSignal>,
 ) {
     let mut parser = StreamParser::new();
@@ -48,9 +49,16 @@ pub(crate) fn reader_thread(
                                 subs.retain(|sub| sub.send(ButtonMask(mask)).is_ok());
                             }
                             ParseEvent::Response(data) => {
-                                let mut pending = pending_responses.lock().unwrap();
-                                if let Some(tx) = pending.pop_front() {
-                                    let _ = tx.send(data);
+                                // Check if this is an unsolicited catch event before
+                                // routing to pending command responses.
+                                if let Some(catch_event) = parser::parse_catch_event(&data) {
+                                    let mut subs = catch_subs.lock().unwrap();
+                                    subs.retain(|sub| sub.send(catch_event).is_ok());
+                                } else {
+                                    let mut pending = pending_responses.lock().unwrap();
+                                    if let Some(tx) = pending.pop_front() {
+                                        let _ = tx.send(data);
+                                    }
                                 }
                             }
                         }

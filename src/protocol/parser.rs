@@ -152,6 +152,46 @@ pub enum ResponseKind {
     ValueOrEcho(String),
 }
 
+/// Try to parse a response buffer as a catch event.
+///
+/// Catch events arrive as unsolicited responses like `km.catch_ml(1)\r\n`
+/// where the value 1 = press and 2 = release. Each event is terminated by
+/// its own `>>> ` prompt, so the response buffer always contains a single
+/// catch line.
+pub fn parse_catch_event(raw: &[u8]) -> Option<crate::types::CatchEvent> {
+    use crate::types::Button;
+
+    let text = std::str::from_utf8(trim_bytes(raw)).ok()?;
+    let rest = text.strip_prefix("km.catch_m")?;
+
+    // Parse button suffix and value.
+    let (button, rest) = if let Some(r) = rest.strip_prefix("s1") {
+        (Button::Side1, r)
+    } else if let Some(r) = rest.strip_prefix("s2") {
+        (Button::Side2, r)
+    } else if let Some(r) = rest.strip_prefix('l') {
+        (Button::Left, r)
+    } else if let Some(r) = rest.strip_prefix('r') {
+        (Button::Right, r)
+    } else if let Some(r) = rest.strip_prefix('m') {
+        (Button::Middle, r)
+    } else {
+        return None;
+    };
+
+    match rest {
+        "(1)" => Some(crate::types::CatchEvent {
+            button,
+            pressed: true,
+        }),
+        "(2)" => Some(crate::types::CatchEvent {
+            button,
+            pressed: false,
+        }),
+        _ => None,
+    }
+}
+
 fn trim_bytes(b: &[u8]) -> &[u8] {
     let is_ws = |&x: &u8| x == b'\r' || x == b'\n' || x == b' ';
     let start = b.iter().position(|x| !is_ws(x)).unwrap_or(b.len());
@@ -284,6 +324,83 @@ mod tests {
             classify_response(resp),
             ResponseKind::Value("1".to_string())
         );
+    }
+
+    #[test]
+    fn catch_event_press() {
+        let event = parse_catch_event(b"km.catch_ml(1)\r\n").unwrap();
+        assert_eq!(event.button, crate::types::Button::Left);
+        assert!(event.pressed);
+    }
+
+    #[test]
+    fn catch_event_release() {
+        let event = parse_catch_event(b"km.catch_ml(2)\r\n").unwrap();
+        assert_eq!(event.button, crate::types::Button::Left);
+        assert!(!event.pressed);
+    }
+
+    #[test]
+    fn catch_event_right() {
+        let event = parse_catch_event(b"km.catch_mr(1)").unwrap();
+        assert_eq!(event.button, crate::types::Button::Right);
+        assert!(event.pressed);
+    }
+
+    #[test]
+    fn catch_event_middle() {
+        let event = parse_catch_event(b"km.catch_mm(2)").unwrap();
+        assert_eq!(event.button, crate::types::Button::Middle);
+        assert!(!event.pressed);
+    }
+
+    #[test]
+    fn catch_event_side1() {
+        let event = parse_catch_event(b"km.catch_ms1(1)").unwrap();
+        assert_eq!(event.button, crate::types::Button::Side1);
+    }
+
+    #[test]
+    fn catch_event_side2() {
+        let event = parse_catch_event(b"km.catch_ms2(2)").unwrap();
+        assert_eq!(event.button, crate::types::Button::Side2);
+    }
+
+    #[test]
+    fn catch_event_not_catch() {
+        // Normal command response should not parse as catch
+        assert!(parse_catch_event(b"km.left(1)\r\n").is_none());
+        assert!(parse_catch_event(b"km.lock_ml(1)\r\n").is_none());
+        assert!(parse_catch_event(b"").is_none());
+    }
+
+    #[test]
+    fn catch_event_enable_response_not_catch() {
+        // The enable command echo "km.catch_ml(0)" should NOT be a catch event
+        assert!(parse_catch_event(b"km.catch_ml(0)\r\n").is_none());
+    }
+
+    #[test]
+    fn catch_event_through_parser() {
+        // Full catch event as it arrives on the wire: "km.catch_ml(1)\r\n>>> "
+        let mut parser = StreamParser::new();
+        let input = b"km.catch_ml(1)\r\n>>> ";
+        let mut events = Vec::new();
+        for &b in input.iter() {
+            if let Some(ev) = parser.feed(b) {
+                events.push(ev);
+            }
+        }
+        // Parser sees "km." then 'c' >= 0x20, flushes to response buffer
+        assert_eq!(events.len(), 1);
+        match &events[0] {
+            ParseEvent::Response(data) => {
+                let catch = parse_catch_event(data).unwrap();
+                assert_eq!(catch.button, crate::types::Button::Left);
+                assert!(catch.pressed);
+            }
+            other => panic!("expected Response, got {:?}", other),
+        }
     }
 
     #[test]
