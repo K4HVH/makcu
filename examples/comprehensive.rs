@@ -343,12 +343,12 @@ async fn main() -> Result<()> {
             "    [callback] Left: {}",
             if pressed { "down" } else { "up" }
         );
-    });
+    })?;
     println!("  on_button_press(Left) registered");
 
     let h2: EventHandle = device.on_button_event(|mask| {
         println!("    [callback] mask: {:#04x}", mask.raw());
-    });
+    })?;
     println!("  on_button_event() registered");
     println!("  Press mouse buttons to see callbacks fire...");
     tokio::time::sleep(Duration::from_secs(3)).await;

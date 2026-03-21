@@ -26,8 +26,10 @@ impl Device {
 
     /// Query whether a button is currently pressed.
     pub fn button_state(&self, button: Button) -> Result<bool> {
-        let value = self.query(constants::button_query_cmd(button))?;
-        Ok(value.trim() == "1")
+        timed!("button_state", {
+            let value = self.query(constants::button_query_cmd(button))?;
+            Ok(value.trim() == "1")
+        })
     }
 }
 
@@ -39,19 +41,30 @@ use super::AsyncDevice;
 #[cfg(feature = "async")]
 impl AsyncDevice {
     pub async fn button_down(&self, button: Button) -> Result<()> {
-        self.exec(constants::button_down_cmd(button)).await
+        timed!(
+            "button_down",
+            self.exec(constants::button_down_cmd(button)).await
+        )
     }
 
     pub async fn button_up(&self, button: Button) -> Result<()> {
-        self.exec(constants::button_up_cmd(button)).await
+        timed!(
+            "button_up",
+            self.exec(constants::button_up_cmd(button)).await
+        )
     }
 
     pub async fn button_up_force(&self, button: Button) -> Result<()> {
-        self.exec(constants::button_force_up_cmd(button)).await
+        timed!(
+            "button_up_force",
+            self.exec(constants::button_force_up_cmd(button)).await
+        )
     }
 
     pub async fn button_state(&self, button: Button) -> Result<bool> {
-        let value = self.query(constants::button_query_cmd(button)).await?;
-        Ok(value.trim() == "1")
+        timed!("button_state", {
+            let value = self.query(constants::button_query_cmd(button)).await?;
+            Ok(value.trim() == "1")
+        })
     }
 }

@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
+use crate::error::Result;
 use crate::types::{Button, ButtonMask};
 
 use crate::device::Device;
@@ -41,7 +42,7 @@ impl Device {
     /// Returns a handle that unregisters the callback when dropped.
     ///
     /// `f` receives `true` when pressed, `false` when released.
-    pub fn on_button_press<F>(&self, button: Button, f: F) -> EventHandle
+    pub fn on_button_press<F>(&self, button: Button, f: F) -> Result<EventHandle>
     where
         F: Fn(bool) + Send + 'static,
     {
@@ -66,14 +67,13 @@ impl Device {
                         Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
                     }
                 }
-            })
-            .expect("failed to spawn makcu event listener thread");
+            })?;
 
-        EventHandle { alive }
+        Ok(EventHandle { alive })
     }
 
     /// Register a callback that fires on any button state change with the full mask.
-    pub fn on_button_event<F>(&self, f: F) -> EventHandle
+    pub fn on_button_event<F>(&self, f: F) -> Result<EventHandle>
     where
         F: Fn(ButtonMask) + Send + 'static,
     {
@@ -91,10 +91,9 @@ impl Device {
                         Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
                     }
                 }
-            })
-            .expect("failed to spawn makcu event listener thread");
+            })?;
 
-        EventHandle { alive }
+        Ok(EventHandle { alive })
     }
 }
 
@@ -106,7 +105,7 @@ use crate::device::AsyncDevice;
 #[cfg(feature = "async")]
 impl AsyncDevice {
     /// Register a callback for button press/release (async — uses std thread for mpsc).
-    pub fn on_button_press<F>(&self, button: Button, f: F) -> EventHandle
+    pub fn on_button_press<F>(&self, button: Button, f: F) -> Result<EventHandle>
     where
         F: Fn(bool) + Send + 'static,
     {
@@ -131,14 +130,13 @@ impl AsyncDevice {
                         Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
                     }
                 }
-            })
-            .expect("failed to spawn makcu event listener thread");
+            })?;
 
-        EventHandle { alive }
+        Ok(EventHandle { alive })
     }
 
     /// Register a callback for any button state change (async).
-    pub fn on_button_event<F>(&self, f: F) -> EventHandle
+    pub fn on_button_event<F>(&self, f: F) -> Result<EventHandle>
     where
         F: Fn(ButtonMask) + Send + 'static,
     {
@@ -156,9 +154,8 @@ impl AsyncDevice {
                         Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
                     }
                 }
-            })
-            .expect("failed to spawn makcu event listener thread");
+            })?;
 
-        EventHandle { alive }
+        Ok(EventHandle { alive })
     }
 }

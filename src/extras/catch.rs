@@ -37,7 +37,7 @@ impl Device {
     ///
     /// `f` receives `true` for press, `false` for release.
     /// Returns a handle that unregisters the callback when dropped.
-    pub fn on_catch<F>(&self, button: Button, f: F) -> EventHandle
+    pub fn on_catch<F>(&self, button: Button, f: F) -> Result<EventHandle>
     where
         F: Fn(bool) + Send + 'static,
     {
@@ -59,17 +59,16 @@ impl Device {
                         Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
                     }
                 }
-            })
-            .expect("failed to spawn makcu catch listener thread");
+            })?;
 
-        EventHandle::new(alive)
+        Ok(EventHandle::new(alive))
     }
 
     /// Register a callback fired on all catch events (any button).
     ///
     /// `f` receives the full `CatchEvent`.
     /// Returns a handle that unregisters the callback when dropped.
-    pub fn on_catch_event<F>(&self, f: F) -> EventHandle
+    pub fn on_catch_event<F>(&self, f: F) -> Result<EventHandle>
     where
         F: Fn(CatchEvent) + Send + 'static,
     {
@@ -87,10 +86,9 @@ impl Device {
                         Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
                     }
                 }
-            })
-            .expect("failed to spawn makcu catch listener thread");
+            })?;
 
-        EventHandle::new(alive)
+        Ok(EventHandle::new(alive))
     }
 }
 
@@ -116,7 +114,7 @@ impl AsyncDevice {
     }
 
     /// Register a callback for catch press/release events on a button (async).
-    pub fn on_catch<F>(&self, button: Button, f: F) -> EventHandle
+    pub fn on_catch<F>(&self, button: Button, f: F) -> Result<EventHandle>
     where
         F: Fn(bool) + Send + 'static,
     {
@@ -138,14 +136,13 @@ impl AsyncDevice {
                         Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
                     }
                 }
-            })
-            .expect("failed to spawn makcu catch listener thread");
+            })?;
 
-        EventHandle::new(alive)
+        Ok(EventHandle::new(alive))
     }
 
     /// Register a callback for all catch events (async).
-    pub fn on_catch_event<F>(&self, f: F) -> EventHandle
+    pub fn on_catch_event<F>(&self, f: F) -> Result<EventHandle>
     where
         F: Fn(CatchEvent) + Send + 'static,
     {
@@ -163,9 +160,8 @@ impl AsyncDevice {
                         Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
                     }
                 }
-            })
-            .expect("failed to spawn makcu catch listener thread");
+            })?;
 
-        EventHandle::new(alive)
+        Ok(EventHandle::new(alive))
     }
 }

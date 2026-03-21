@@ -36,19 +36,25 @@ use super::AsyncDevice;
 #[cfg(feature = "async")]
 impl AsyncDevice {
     pub async fn move_xy(&self, x: i32, y: i32) -> Result<()> {
-        self.exec_dynamic(builder::build_move(x, y)?.as_bytes())
-            .await
+        timed!("move_xy", {
+            self.exec_dynamic(builder::build_move(x, y)?.as_bytes())
+                .await
+        })
     }
 
     /// Left-down → move(x,y) → left-up in two HID frames.
     pub async fn silent_move(&self, x: i32, y: i32) -> Result<()> {
-        self.exec_dynamic(builder::build_silent_move(x, y)?.as_bytes())
-            .await
+        timed!("silent_move", {
+            self.exec_dynamic(builder::build_silent_move(x, y)?.as_bytes())
+                .await
+        })
     }
 
     /// Scroll wheel. Range ±127.
     pub async fn wheel(&self, delta: i32) -> Result<()> {
-        self.exec_dynamic(builder::build_wheel(delta)?.as_bytes())
-            .await
+        timed!("wheel", {
+            self.exec_dynamic(builder::build_wheel(delta)?.as_bytes())
+                .await
+        })
     }
 }
