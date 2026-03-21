@@ -448,7 +448,6 @@ async fn main() -> Result<()> {
     println!("\n--- 16. Error Types ---");
 
     let errors: Vec<MakcuError> = vec![
-        MakcuError::NotConnected,
         MakcuError::Timeout,
         MakcuError::NotFound,
         MakcuError::Disconnected,

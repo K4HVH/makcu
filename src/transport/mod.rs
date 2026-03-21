@@ -175,11 +175,12 @@ impl TransportHandle {
         // Spawn monitor if reconnection is enabled.
         if reconnect {
             let monitor_inner = Arc::clone(&inner);
-            let _ = std::thread::Builder::new()
+            std::thread::Builder::new()
                 .name("makcu-monitor".into())
                 .spawn(move || {
                     monitor::monitor_thread(monitor_inner);
-                });
+                })
+                .map_err(MakcuError::Io)?;
         }
 
         Ok(Self { inner })
