@@ -5,6 +5,8 @@ mod locks;
 mod movement;
 mod stream;
 
+use std::cell::Cell;
+use std::ops::Deref;
 use std::sync::mpsc;
 use std::time::Duration;
 
@@ -13,6 +15,36 @@ use crate::protocol::parser::{self, ResponseKind};
 use crate::transport::TransportHandle;
 use crate::transport::serial;
 use crate::types::ConnectionState;
+
+// Thread-local fire-and-forget override. When set, `exec()` and
+// `exec_dynamic()` skip waiting for responses. Thread-local ensures no
+// cross-thread interference when a `Device` is shared via `Arc`.
+thread_local! {
+    static FF_OVERRIDE: Cell<bool> = const { Cell::new(false) };
+}
+
+fn is_ff_override() -> bool {
+    FF_OVERRIDE.with(|c| c.get())
+}
+
+/// RAII guard that enables fire-and-forget for the current thread.
+/// Restores the previous value on drop.
+struct FfGuard {
+    prev: bool,
+}
+
+impl FfGuard {
+    fn new() -> Self {
+        let prev = FF_OVERRIDE.with(|c| c.replace(true));
+        Self { prev }
+    }
+}
+
+impl Drop for FfGuard {
+    fn drop(&mut self) {
+        FF_OVERRIDE.with(|c| c.set(self.prev));
+    }
+}
 
 /// Default command timeout.
 const DEFAULT_TIMEOUT: Duration = Duration::from_millis(500);
@@ -129,24 +161,31 @@ impl Device {
         self.transport.subscribe_state()
     }
 
-    /// Returns a fire-and-forget wrapper. Commands sent through this wrapper
-    /// return immediately without waiting for the device response.
+    /// Returns a fire-and-forget guard. While the guard is alive, all
+    /// commands sent through it on the current thread skip waiting for
+    /// responses. Derefs to `Device`, so every method is available.
     pub fn ff(&self) -> FireAndForget<'_> {
-        FireAndForget { device: self }
+        FireAndForget {
+            device: self,
+            _guard: FfGuard::new(),
+        }
     }
 
     /// Send raw command bytes (escape hatch for unwrapped firmware commands).
     /// The `\r\n` terminator must already be included.
+    ///
+    /// In fire-and-forget mode the command is sent without waiting for a
+    /// response and an empty `Vec` is returned.
     pub fn send_raw(&self, cmd: &[u8]) -> Result<Vec<u8>> {
-        self.transport
-            .send_static(
-                cmd,
-                self.config.fire_and_forget,
-                self.config.command_timeout,
-            )?
-            .ok_or(MakcuError::Protocol(
-                "expected response but got fire-and-forget".into(),
-            ))
+        let ff = self.is_ff();
+        let resp = self
+            .transport
+            .send_static(cmd, ff, self.config.command_timeout)?;
+        match resp {
+            Some(data) => Ok(data),
+            None if ff => Ok(Vec::new()),
+            None => Err(MakcuError::Timeout),
+        }
     }
 
     /// Start building a batch of commands.
@@ -157,8 +196,12 @@ impl Device {
 
     // -- Internal helpers --
 
+    pub(crate) fn is_ff(&self) -> bool {
+        self.config.fire_and_forget || is_ff_override()
+    }
+
     pub(crate) fn exec(&self, cmd: &[u8]) -> Result<()> {
-        if self.config.fire_and_forget {
+        if self.is_ff() {
             self.transport
                 .send_static(cmd, true, self.config.command_timeout)?;
             return Ok(());
@@ -180,11 +223,8 @@ impl Device {
     }
 
     pub(crate) fn exec_dynamic(&self, cmd: &[u8]) -> Result<()> {
-        self.transport.send_command(
-            cmd.to_vec(),
-            self.config.fire_and_forget,
-            self.config.command_timeout,
-        )?;
+        self.transport
+            .send_command(cmd.to_vec(), self.is_ff(), self.config.command_timeout)?;
         Ok(())
     }
 
@@ -223,33 +263,23 @@ impl Device {
 // FireAndForget (sync)
 // ===========================================================================
 
-/// Fire-and-forget wrapper. All commands return immediately after writing
-/// to the transport channel, without waiting for the device response.
+/// Fire-and-forget RAII guard. While this guard is alive, all commands sent
+/// through the referenced `Device` on the current thread skip waiting for
+/// responses. Derefs to `Device`, so every method (including extras) is
+/// available.
+///
+/// Query methods (`version()`, `button_state()`, etc.) always wait for a
+/// response regardless of fire-and-forget mode, since they must return a value.
 pub struct FireAndForget<'d> {
     device: &'d Device,
+    _guard: FfGuard,
 }
 
-impl FireAndForget<'_> {
-    /// Send raw command bytes without waiting for a response.
-    /// The `\r\n` terminator must already be included.
-    pub fn send_raw(&self, cmd: &[u8]) -> Result<()> {
-        self.send(cmd)
-    }
+impl Deref for FireAndForget<'_> {
+    type Target = Device;
 
-    pub(crate) fn send(&self, cmd: &[u8]) -> Result<()> {
+    fn deref(&self) -> &Device {
         self.device
-            .transport
-            .send_static(cmd, true, self.device.config.command_timeout)?;
-        Ok(())
-    }
-
-    pub(crate) fn send_dynamic(&self, cmd: &[u8]) -> Result<()> {
-        self.device.transport.send_command(
-            cmd.to_vec(),
-            true,
-            self.device.config.command_timeout,
-        )?;
-        Ok(())
     }
 }
 
@@ -331,23 +361,29 @@ impl AsyncDevice {
         self.transport.subscribe_state()
     }
 
-    /// Returns a fire-and-forget wrapper.
+    /// Returns a fire-and-forget guard. Derefs to `AsyncDevice`.
     pub fn ff(&self) -> AsyncFireAndForget<'_> {
-        AsyncFireAndForget { device: self }
+        AsyncFireAndForget {
+            device: self,
+            _guard: FfGuard::new(),
+        }
     }
 
     /// Send raw command bytes (async escape hatch).
+    ///
+    /// In fire-and-forget mode the command is sent without waiting for a
+    /// response and an empty `Vec` is returned.
     pub async fn send_raw(&self, cmd: &[u8]) -> Result<Vec<u8>> {
-        self.transport
-            .send_static_async(
-                cmd,
-                self.config.fire_and_forget,
-                self.config.command_timeout,
-            )
-            .await?
-            .ok_or(MakcuError::Protocol(
-                "expected response but got fire-and-forget".into(),
-            ))
+        let ff = self.is_ff();
+        let resp = self
+            .transport
+            .send_static_async(cmd, ff, self.config.command_timeout)
+            .await?;
+        match resp {
+            Some(data) => Ok(data),
+            None if ff => Ok(Vec::new()),
+            None => Err(MakcuError::Timeout),
+        }
     }
 
     /// Start building a batch of commands.
@@ -358,8 +394,12 @@ impl AsyncDevice {
 
     // -- Internal async helpers --
 
+    pub(crate) fn is_ff(&self) -> bool {
+        self.config.fire_and_forget || is_ff_override()
+    }
+
     pub(crate) async fn exec(&self, cmd: &[u8]) -> Result<()> {
-        if self.config.fire_and_forget {
+        if self.is_ff() {
             self.transport
                 .send_static(cmd, true, self.config.command_timeout)?;
             return Ok(());
@@ -383,11 +423,7 @@ impl AsyncDevice {
 
     pub(crate) async fn exec_dynamic(&self, cmd: &[u8]) -> Result<()> {
         self.transport
-            .send_command_async(
-                cmd.to_vec(),
-                self.config.fire_and_forget,
-                self.config.command_timeout,
-            )
+            .send_command_async(cmd.to_vec(), self.is_ff(), self.config.command_timeout)
             .await?;
         Ok(())
     }
@@ -431,30 +467,15 @@ impl AsyncDevice {
 #[cfg(feature = "async")]
 pub struct AsyncFireAndForget<'d> {
     device: &'d AsyncDevice,
+    _guard: FfGuard,
 }
 
 #[cfg(feature = "async")]
-impl AsyncFireAndForget<'_> {
-    /// Send raw command bytes without waiting for a response.
-    /// The `\r\n` terminator must already be included.
-    pub fn send_raw(&self, cmd: &[u8]) -> Result<()> {
-        self.send(cmd)
-    }
+impl Deref for AsyncFireAndForget<'_> {
+    type Target = AsyncDevice;
 
-    pub(crate) fn send(&self, cmd: &[u8]) -> Result<()> {
+    fn deref(&self) -> &AsyncDevice {
         self.device
-            .transport
-            .send_static(cmd, true, self.device.config.command_timeout)?;
-        Ok(())
-    }
-
-    pub(crate) fn send_dynamic(&self, cmd: &[u8]) -> Result<()> {
-        self.device.transport.send_command(
-            cmd.to_vec(),
-            true,
-            self.device.config.command_timeout,
-        )?;
-        Ok(())
     }
 }
 

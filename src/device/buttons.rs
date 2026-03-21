@@ -3,7 +3,7 @@ use crate::protocol::constants;
 use crate::timed;
 use crate::types::Button;
 
-use super::{Device, FireAndForget};
+use super::Device;
 
 impl Device {
     /// Force a button down (held).
@@ -31,24 +31,10 @@ impl Device {
     }
 }
 
-impl FireAndForget<'_> {
-    pub fn button_down(&self, button: Button) -> Result<()> {
-        self.send(constants::button_down_cmd(button))
-    }
-
-    pub fn button_up(&self, button: Button) -> Result<()> {
-        self.send(constants::button_up_cmd(button))
-    }
-
-    pub fn button_up_force(&self, button: Button) -> Result<()> {
-        self.send(constants::button_force_up_cmd(button))
-    }
-}
-
 // -- Async --
 
 #[cfg(feature = "async")]
-use super::{AsyncDevice, AsyncFireAndForget};
+use super::AsyncDevice;
 
 #[cfg(feature = "async")]
 impl AsyncDevice {
@@ -67,20 +53,5 @@ impl AsyncDevice {
     pub async fn button_state(&self, button: Button) -> Result<bool> {
         let value = self.query(constants::button_query_cmd(button)).await?;
         Ok(value.trim() == "1")
-    }
-}
-
-#[cfg(feature = "async")]
-impl AsyncFireAndForget<'_> {
-    pub fn button_down(&self, button: Button) -> Result<()> {
-        self.send(constants::button_down_cmd(button))
-    }
-
-    pub fn button_up(&self, button: Button) -> Result<()> {
-        self.send(constants::button_up_cmd(button))
-    }
-
-    pub fn button_up_force(&self, button: Button) -> Result<()> {
-        self.send(constants::button_force_up_cmd(button))
     }
 }

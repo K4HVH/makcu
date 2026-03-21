@@ -3,7 +3,7 @@ use crate::protocol::constants;
 use crate::timed;
 use crate::types::{LockStates, LockTarget};
 
-use super::{Device, FireAndForget};
+use super::Device;
 
 impl Device {
     /// Lock or unlock a mouse input.
@@ -34,16 +34,10 @@ impl Device {
     }
 }
 
-impl FireAndForget<'_> {
-    pub fn set_lock(&self, target: LockTarget, locked: bool) -> Result<()> {
-        self.send(constants::lock_set_cmd(target, locked))
-    }
-}
-
 // -- Async --
 
 #[cfg(feature = "async")]
-use super::{AsyncDevice, AsyncFireAndForget};
+use super::AsyncDevice;
 
 #[cfg(feature = "async")]
 impl AsyncDevice {
@@ -66,12 +60,5 @@ impl AsyncDevice {
             side1: self.lock_state(LockTarget::Side1).await?,
             side2: self.lock_state(LockTarget::Side2).await?,
         })
-    }
-}
-
-#[cfg(feature = "async")]
-impl AsyncFireAndForget<'_> {
-    pub fn set_lock(&self, target: LockTarget, locked: bool) -> Result<()> {
-        self.send(constants::lock_set_cmd(target, locked))
     }
 }

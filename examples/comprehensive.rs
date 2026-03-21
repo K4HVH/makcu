@@ -223,35 +223,35 @@ async fn main() -> Result<()> {
     let ff = device.ff();
 
     println!("  ff.button_down(Left)...");
-    ff.button_down(Button::Left)?;
+    ff.button_down(Button::Left).await?;
     tokio::time::sleep(Duration::from_millis(100)).await;
 
-    ff.button_up(Button::Left)?;
+    ff.button_up(Button::Left).await?;
     println!("  ff.button_up(Left)");
 
-    ff.button_up_force(Button::Right)?;
+    ff.button_up_force(Button::Right).await?;
     println!("  ff.button_up_force(Right)");
 
     println!("  ff.move_xy(30, 0)...");
-    ff.move_xy(30, 0)?;
+    ff.move_xy(30, 0).await?;
     tokio::time::sleep(Duration::from_millis(200)).await;
-    ff.move_xy(-30, 0)?;
+    ff.move_xy(-30, 0).await?;
     println!("  ff.move_xy(-30, 0)");
 
-    ff.silent_move(5, 5)?;
-    ff.silent_move(-5, -5)?;
+    ff.silent_move(5, 5).await?;
+    ff.silent_move(-5, -5).await?;
     println!("  ff.silent_move: there and back");
 
-    ff.wheel(1)?;
-    ff.wheel(-1)?;
+    ff.wheel(1).await?;
+    ff.wheel(-1).await?;
     println!("  ff.wheel: up 1, down 1");
 
-    ff.set_lock(LockTarget::X, true)?;
-    ff.set_lock(LockTarget::X, false)?;
+    ff.set_lock(LockTarget::X, true).await?;
+    ff.set_lock(LockTarget::X, false).await?;
     println!("  ff.set_lock: X on then off");
 
-    ff.enable_button_stream()?;
-    ff.disable_button_stream()?;
+    ff.enable_button_stream().await?;
+    ff.disable_button_stream().await?;
     println!("  ff.enable/disable_button_stream");
     pause().await;
 

@@ -4,7 +4,7 @@ use crate::error::Result;
 use crate::protocol::constants;
 use crate::types::{Button, CatchEvent};
 
-use super::{Device, FireAndForget};
+use super::Device;
 
 impl Device {
     /// Enable the catch stream for a button.
@@ -30,16 +30,10 @@ impl Device {
     }
 }
 
-impl FireAndForget<'_> {
-    pub fn enable_catch(&self, button: Button) -> Result<()> {
-        self.send(constants::catch_enable_cmd(button))
-    }
-}
-
 // -- Async --
 
 #[cfg(feature = "async")]
-use super::{AsyncDevice, AsyncFireAndForget};
+use super::AsyncDevice;
 
 #[cfg(feature = "async")]
 impl AsyncDevice {
@@ -55,12 +49,5 @@ impl AsyncDevice {
     /// Subscribe to catch events.
     pub fn catch_events(&self) -> mpsc::Receiver<CatchEvent> {
         self.transport().subscribe_catch()
-    }
-}
-
-#[cfg(feature = "async")]
-impl AsyncFireAndForget<'_> {
-    pub fn enable_catch(&self, button: Button) -> Result<()> {
-        self.send(constants::catch_enable_cmd(button))
     }
 }

@@ -4,7 +4,7 @@ use crate::error::Result;
 use crate::protocol::constants;
 use crate::types::ButtonMask;
 
-use super::{Device, FireAndForget};
+use super::Device;
 
 impl Device {
     /// Enable the button-state-change stream on the device.
@@ -32,20 +32,10 @@ impl Device {
     }
 }
 
-impl FireAndForget<'_> {
-    pub fn enable_button_stream(&self) -> Result<()> {
-        self.send(constants::CMD_BUTTONS_ON)
-    }
-
-    pub fn disable_button_stream(&self) -> Result<()> {
-        self.send(constants::CMD_BUTTONS_OFF)
-    }
-}
-
 // -- Async --
 
 #[cfg(feature = "async")]
-use super::{AsyncDevice, AsyncFireAndForget};
+use super::AsyncDevice;
 
 #[cfg(feature = "async")]
 impl AsyncDevice {
@@ -65,16 +55,5 @@ impl AsyncDevice {
 
     pub fn button_events(&self) -> mpsc::Receiver<ButtonMask> {
         self.transport().subscribe_buttons()
-    }
-}
-
-#[cfg(feature = "async")]
-impl AsyncFireAndForget<'_> {
-    pub fn enable_button_stream(&self) -> Result<()> {
-        self.send(constants::CMD_BUTTONS_ON)
-    }
-
-    pub fn disable_button_stream(&self) -> Result<()> {
-        self.send(constants::CMD_BUTTONS_OFF)
     }
 }
