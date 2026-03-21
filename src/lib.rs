@@ -33,7 +33,9 @@ pub mod profiler;
 
 pub use device::{Device, DeviceConfig, FireAndForget};
 pub use error::{MakcuError, Result};
-pub use types::{Button, ButtonMask, ConnectionState, DeviceInfo, LockStates, LockTarget};
+pub use types::{
+    Button, ButtonMask, CatchEvent, ConnectionState, DeviceInfo, LockStates, LockTarget,
+};
 
 #[cfg(feature = "async")]
 pub use device::{AsyncDevice, AsyncFireAndForget};

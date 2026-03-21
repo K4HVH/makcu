@@ -90,6 +90,25 @@ impl<'d> BatchBuilder<'d> {
         self
     }
 
+    pub fn enable_catch(mut self, button: Button) -> Self {
+        self.steps.push(BatchStep::Native(
+            constants::catch_enable_cmd(button).to_vec(),
+        ));
+        self
+    }
+
+    pub fn enable_button_stream(mut self) -> Self {
+        self.steps
+            .push(BatchStep::Native(constants::CMD_BUTTONS_ON.to_vec()));
+        self
+    }
+
+    pub fn disable_button_stream(mut self) -> Self {
+        self.steps
+            .push(BatchStep::Native(constants::CMD_BUTTONS_OFF.to_vec()));
+        self
+    }
+
     /// Execute all queued commands.
     /// Consecutive native commands are coalesced into single writes.
     pub fn execute(self) -> Result<()> {
@@ -137,6 +156,25 @@ fn flush_native(device: &Device, buf: &mut Vec<u8>) -> Result<()> {
 
 #[cfg(feature = "extras")]
 impl<'d> BatchBuilder<'d> {
+    /// Lock the button and enable catch in one batch step.
+    pub fn start_catch(mut self, button: Button) -> Self {
+        self.steps.push(BatchStep::Native(
+            constants::lock_set_cmd(constants::button_to_lock_target(button), true).to_vec(),
+        ));
+        self.steps.push(BatchStep::Native(
+            constants::catch_enable_cmd(button).to_vec(),
+        ));
+        self
+    }
+
+    /// Unlock the button, stopping the catch stream.
+    pub fn stop_catch(mut self, button: Button) -> Self {
+        self.steps.push(BatchStep::Native(
+            constants::lock_set_cmd(constants::button_to_lock_target(button), false).to_vec(),
+        ));
+        self
+    }
+
     pub fn click(mut self, button: Button, hold: Duration) -> Self {
         self.steps.push(BatchStep::Extras(Box::new(move |dev| {
             dev.click(button, hold)
@@ -300,6 +338,25 @@ impl<'d> AsyncBatchBuilder<'d> {
         self
     }
 
+    pub fn enable_catch(mut self, button: Button) -> Self {
+        self.steps.push(AsyncBatchStep::Native(
+            constants::catch_enable_cmd(button).to_vec(),
+        ));
+        self
+    }
+
+    pub fn enable_button_stream(mut self) -> Self {
+        self.steps
+            .push(AsyncBatchStep::Native(constants::CMD_BUTTONS_ON.to_vec()));
+        self
+    }
+
+    pub fn disable_button_stream(mut self) -> Self {
+        self.steps
+            .push(AsyncBatchStep::Native(constants::CMD_BUTTONS_OFF.to_vec()));
+        self
+    }
+
     /// Execute all queued commands (async).
     pub async fn execute(self) -> Result<()> {
         if let Some(e) = self.error {
@@ -376,6 +433,25 @@ async fn execute_extras_step(device: &AsyncDevice, step: AsyncBatchStep) -> Resu
 // Extras methods on async builder
 #[cfg(all(feature = "async", feature = "extras"))]
 impl<'d> AsyncBatchBuilder<'d> {
+    /// Lock the button and enable catch in one batch step.
+    pub fn start_catch(mut self, button: Button) -> Self {
+        self.steps.push(AsyncBatchStep::Native(
+            constants::lock_set_cmd(constants::button_to_lock_target(button), true).to_vec(),
+        ));
+        self.steps.push(AsyncBatchStep::Native(
+            constants::catch_enable_cmd(button).to_vec(),
+        ));
+        self
+    }
+
+    /// Unlock the button, stopping the catch stream.
+    pub fn stop_catch(mut self, button: Button) -> Self {
+        self.steps.push(AsyncBatchStep::Native(
+            constants::lock_set_cmd(constants::button_to_lock_target(button), false).to_vec(),
+        ));
+        self
+    }
+
     pub fn click(mut self, button: Button, hold: Duration) -> Self {
         self.steps.push(AsyncBatchStep::Click { button, hold });
         self

@@ -1,4 +1,5 @@
 mod buttons;
+mod catch;
 mod info;
 mod locks;
 mod movement;

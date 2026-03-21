@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, mpsc};
 
-use crate::types::ButtonMask;
+use crate::types::{ButtonMask, CatchEvent};
 
 use super::writer::WritePayload;
 
@@ -13,6 +13,7 @@ use super::writer::WritePayload;
 pub struct MockTransport {
     responses: Mutex<HashMap<Vec<u8>, Vec<u8>>>,
     button_queue: Mutex<Vec<ButtonMask>>,
+    catch_queue: Mutex<Vec<CatchEvent>>,
     sent_commands: Mutex<Vec<Vec<u8>>>,
 }
 
@@ -29,6 +30,7 @@ impl MockTransport {
         Self {
             responses: Mutex::new(HashMap::new()),
             button_queue: Mutex::new(Vec::new()),
+            catch_queue: Mutex::new(Vec::new()),
             sent_commands: Mutex::new(Vec::new()),
         }
     }
@@ -45,6 +47,11 @@ impl MockTransport {
     /// Queue a button event that will be emitted to subscribers on the next command.
     pub fn inject_button_event(&self, mask: ButtonMask) {
         self.button_queue.lock().unwrap().push(mask);
+    }
+
+    /// Queue a catch event that will be emitted to subscribers on the next command.
+    pub fn inject_catch_event(&self, event: CatchEvent) {
+        self.catch_queue.lock().unwrap().push(event);
     }
 
     /// Get all commands that have been sent through this transport.
@@ -68,6 +75,11 @@ impl MockTransport {
     pub(crate) fn drain_button_events(&self) -> Vec<ButtonMask> {
         std::mem::take(&mut *self.button_queue.lock().unwrap())
     }
+
+    /// Drain queued catch events.
+    pub(crate) fn drain_catch_events(&self) -> Vec<CatchEvent> {
+        std::mem::take(&mut *self.catch_queue.lock().unwrap())
+    }
 }
 
 /// Worker thread that processes commands through the MockTransport.
@@ -76,6 +88,7 @@ pub(crate) fn mock_worker(
     rx: crossbeam_channel::Receiver<WritePayload>,
     mock: Arc<MockTransport>,
     button_subs: Arc<Mutex<Vec<mpsc::Sender<ButtonMask>>>>,
+    catch_subs: Arc<Mutex<Vec<mpsc::Sender<CatchEvent>>>>,
 ) {
     loop {
         match rx.recv() {
@@ -93,6 +106,15 @@ pub(crate) fn mock_worker(
                 if !events.is_empty() {
                     let mut subs = button_subs.lock().unwrap();
                     for event in &events {
+                        subs.retain(|sub| sub.send(*event).is_ok());
+                    }
+                }
+
+                // Dispatch any queued catch events.
+                let catch_events = mock.drain_catch_events();
+                if !catch_events.is_empty() {
+                    let mut subs = catch_subs.lock().unwrap();
+                    for event in &catch_events {
                         subs.retain(|sub| sub.send(*event).is_ok());
                     }
                 }

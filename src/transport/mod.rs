@@ -14,7 +14,7 @@ use std::time::Duration;
 use crossbeam_channel as channel;
 
 use crate::error::{MakcuError, Result};
-use crate::types::{ButtonMask, ConnectionState};
+use crate::types::{ButtonMask, CatchEvent, ConnectionState};
 
 use self::reader::ReaderSignal;
 use self::writer::WritePayload;
@@ -47,6 +47,9 @@ pub(crate) struct TransportInner {
 
     // Button event subscribers.
     button_subs: Arc<Mutex<Vec<mpsc::Sender<ButtonMask>>>>,
+
+    // Catch event subscribers.
+    catch_subs: Arc<Mutex<Vec<mpsc::Sender<CatchEvent>>>>,
 
     // Connection state subscribers.
     pub state_subs: Mutex<Vec<mpsc::Sender<ConnectionState>>>,
@@ -88,11 +91,18 @@ impl TransportInner {
         // Spawn reader.
         let reader_pending = Arc::clone(&self.pending_responses);
         let reader_buttons = Arc::clone(&self.button_subs);
+        let reader_catch = Arc::clone(&self.catch_subs);
         let reader_signal = Arc::clone(&signal);
         let reader_handle = std::thread::Builder::new()
             .name("makcu-reader".into())
             .spawn(move || {
-                reader::reader_thread(reader_port, reader_pending, reader_buttons, reader_signal);
+                reader::reader_thread(
+                    reader_port,
+                    reader_pending,
+                    reader_buttons,
+                    reader_catch,
+                    reader_signal,
+                );
             })
             .map_err(MakcuError::Io)?;
 
@@ -153,6 +163,7 @@ impl TransportHandle {
             write_rx,
             pending_responses: Arc::new(Mutex::new(VecDeque::new())),
             button_subs: Arc::new(Mutex::new(Vec::new())),
+            catch_subs: Arc::new(Mutex::new(Vec::new())),
             state_subs: Mutex::new(Vec::new()),
             reader_signal: Mutex::new(None),
             threads: Mutex::new(Vec::new()),
@@ -182,6 +193,8 @@ impl TransportHandle {
         let mock_transport = Arc::new(mock::MockTransport::new());
         let button_subs = Arc::new(Mutex::new(Vec::new()));
 
+        let catch_subs = Arc::new(Mutex::new(Vec::new()));
+
         let inner = Arc::new(TransportInner {
             conn_state: AtomicU8::new(ConnectionState::Connected as u8),
             shutdown: AtomicBool::new(false),
@@ -190,6 +203,7 @@ impl TransportHandle {
             write_rx: write_rx.clone(),
             pending_responses: Arc::new(Mutex::new(VecDeque::new())),
             button_subs: Arc::clone(&button_subs),
+            catch_subs: Arc::clone(&catch_subs),
             state_subs: Mutex::new(Vec::new()),
             reader_signal: Mutex::new(None),
             threads: Mutex::new(Vec::new()),
@@ -199,10 +213,11 @@ impl TransportHandle {
         // Spawn mock worker thread that processes commands through MockTransport.
         let mock_clone = Arc::clone(&mock_transport);
         let subs_clone = Arc::clone(&button_subs);
+        let catch_clone = Arc::clone(&catch_subs);
         let handle = std::thread::Builder::new()
             .name("makcu-mock-worker".into())
             .spawn(move || {
-                mock::mock_worker(write_rx, mock_clone, subs_clone);
+                mock::mock_worker(write_rx, mock_clone, subs_clone, catch_clone);
             })
             .unwrap();
 
@@ -323,6 +338,13 @@ impl TransportHandle {
     pub fn subscribe_buttons(&self) -> mpsc::Receiver<ButtonMask> {
         let (tx, rx) = mpsc::channel();
         self.inner.button_subs.lock().unwrap().push(tx);
+        rx
+    }
+
+    /// Subscribe to catch events (per-button press/release stream).
+    pub fn subscribe_catch(&self) -> mpsc::Receiver<CatchEvent> {
+        let (tx, rx) = mpsc::channel();
+        self.inner.catch_subs.lock().unwrap().push(tx);
         rx
     }
 
